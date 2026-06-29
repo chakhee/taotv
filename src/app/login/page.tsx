@@ -459,57 +459,49 @@ function LoginPageClient() {
           )}
         </form>
 
-        {/* Telegram登录按钮 */}
-        {telegramLoginEnabled && shouldAskUsername && (
+        {/* 第三方登录区域 */}
+        {shouldAskUsername && (telegramLoginEnabled || siteConfig?.EnableOIDCLogin) && (
           <div className='mt-6'>
             <div className='relative'>
               <div className='absolute inset-0 flex items-center'>
                 <div className='w-full border-t border-gray-300 dark:border-gray-600'></div>
               </div>
               <div className='relative flex justify-center text-sm'>
-                <span className='px-2 bg-white/60 dark:bg-zinc-900/60 text-gray-500 dark:text-gray-400'>
+                <span className='px-2 text-gray-500 dark:text-gray-400'>
                   或
                 </span>
               </div>
             </div>
-            <button
-              type='button'
-              disabled={telegramLoginLoading}
-              onClick={handleTelegramLogin}
-              className='mt-4 w-full inline-flex justify-center items-center rounded-lg border-2 border-sky-300 dark:border-sky-700 bg-white/60 dark:bg-zinc-800/60 py-3 text-base font-semibold text-sky-700 dark:text-sky-300 shadow-sm transition-all duration-200 hover:bg-sky-50 dark:hover:bg-sky-900/30 disabled:cursor-not-allowed disabled:opacity-60'
-            >
-              <Send className='w-5 h-5 mr-2' />
-              {telegramLoginLoading ? '等待 Telegram 确认...' : '使用 Telegram 登录'}
-            </button>
-            {telegramLoginHint && (
-              <p className='mt-2 text-center text-xs text-gray-500 dark:text-gray-400'>
-                {telegramLoginHint}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* OIDC登录按钮 */}
-        {siteConfig?.EnableOIDCLogin && shouldAskUsername && (
-          <div className='mt-6'>
-            <div className='relative'>
-              <div className='absolute inset-0 flex items-center'>
-                <div className='w-full border-t border-gray-300 dark:border-gray-600'></div>
-              </div>
-              <div className='relative flex justify-center text-sm'>
-                <span className='px-2 bg-white/60 dark:bg-zinc-900/60 text-gray-500 dark:text-gray-400'>
-                  或
-                </span>
-              </div>
+            <div className='mt-4 space-y-3'>
+              {/* Telegram登录按钮 */}
+              {telegramLoginEnabled && (
+                <button
+                  type='button'
+                  disabled={telegramLoginLoading}
+                  onClick={handleTelegramLogin}
+                  className='w-full inline-flex justify-center items-center rounded-lg border-2 border-sky-300 dark:border-sky-700 bg-white/60 dark:bg-zinc-800/60 py-3 text-base font-semibold text-sky-700 dark:text-sky-300 shadow-sm transition-all duration-200 hover:bg-sky-50 dark:hover:bg-sky-900/30 disabled:cursor-not-allowed disabled:opacity-60'
+                >
+                  <Send className='w-5 h-5 mr-2' />
+                  {telegramLoginLoading ? '等待 Telegram 确认...' : '使用 Telegram 登录'}
+                </button>
+              )}
+              {telegramLoginHint && (
+                <p className='text-center text-xs text-gray-500 dark:text-gray-400'>
+                  {telegramLoginHint}
+                </p>
+              )}
+              {/* OIDC登录按钮 */}
+              {siteConfig?.EnableOIDCLogin && (
+                <button
+                  type='button'
+                  onClick={() => window.location.href = '/api/auth/oidc/login'}
+                  className='w-full inline-flex justify-center items-center rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white/60 dark:bg-zinc-800/60 py-3 text-base font-semibold text-gray-700 dark:text-gray-200 shadow-sm transition-all duration-200 hover:bg-gray-50 dark:hover:bg-zinc-700/60'
+                >
+                  {getOIDCProviderIcon(siteConfig?.OIDCButtonText || '')}
+                  {siteConfig?.OIDCButtonText || '使用OIDC登录'}
+                </button>
+              )}
             </div>
-            <button
-              type='button'
-              onClick={() => window.location.href = '/api/auth/oidc/login'}
-              className='mt-4 w-full inline-flex justify-center items-center rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white/60 dark:bg-zinc-800/60 py-3 text-base font-semibold text-gray-700 dark:text-gray-200 shadow-sm transition-all duration-200 hover:bg-gray-50 dark:hover:bg-zinc-700/60'
-            >
-              {getOIDCProviderIcon(siteConfig?.OIDCButtonText || '')}
-              {siteConfig?.OIDCButtonText || '使用OIDC登录'}
-            </button>
           </div>
         )}
       </div>
