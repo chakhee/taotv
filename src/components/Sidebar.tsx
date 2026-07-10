@@ -3,6 +3,7 @@
 'use client';
 
 import { Blend, Cat, Clover, Container, Film, Globe, Home, Menu, Search, Star, Tv, TvMinimalPlay, Users } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
@@ -33,8 +34,16 @@ const Logo = () => {
   return (
     <Link
       href='/'
-      className='flex items-center justify-center h-16 select-none hover:opacity-80 transition-opacity duration-200'
+      className='flex items-center justify-center h-16 gap-2 select-none hover:opacity-80 transition-opacity duration-200'
     >
+      <Image
+        src='/logo.png'
+        alt={`${siteName} logo`}
+        width={36}
+        height={36}
+        className='h-9 w-9 object-contain'
+        priority
+      />
       <span className='text-2xl font-bold text-green-600 tracking-tight'>
         {siteName}
       </span>
