@@ -3,6 +3,7 @@
 'use client';
 
 import { AlertCircle, CheckCircle, Eye, EyeOff, Send, User, Lock } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -351,7 +352,17 @@ function LoginPageClient() {
       </div>
       <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 shadow-2xl p-10 dark:border dark:border-zinc-800'>
         <h1 className='text-green-600 tracking-tight text-center text-3xl font-extrabold mb-8 bg-clip-text drop-shadow-sm'>
-          {siteName}
+          <span className='inline-flex items-center justify-center gap-2'>
+            <Image
+              src='/logo.png'
+              alt={`${siteName} logo`}
+              width={36}
+              height={36}
+              className='h-9 w-9 object-contain'
+              priority
+            />
+            <span>{siteName}</span>
+          </span>
         </h1>
         <form onSubmit={handleSubmit} className='space-y-8'>
           {shouldAskUsername && (
