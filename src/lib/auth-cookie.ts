@@ -45,6 +45,7 @@ export function getDeviceInfoFromUserAgent(userAgent: string): string {
 
   if (ua.includes('moontvplus')) return 'MoonTVPlus APP';
   if (ua.includes('oriontv')) return 'OrionTV';
+  if (ua.includes('telegram')) return 'Telegram Login';
   if (ua.includes('chrome')) return 'Chrome';
   if (ua.includes('firefox')) return 'Firefox';
   if (ua.includes('safari')) return 'Safari';

@@ -109,9 +109,9 @@ export class PostgresStorage implements IStorage {
           INSERT INTO play_records (
             username, key, title, source_name, cover, year,
             episode_index, total_episodes, play_time, total_time,
-            save_time, search_title, new_episodes, is_anime
+            save_time, search_title, new_episodes
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
           ON CONFLICT (username, key) DO UPDATE SET
             title = EXCLUDED.title,
             source_name = EXCLUDED.source_name,
@@ -123,8 +123,7 @@ export class PostgresStorage implements IStorage {
             total_time = EXCLUDED.total_time,
             save_time = EXCLUDED.save_time,
             search_title = EXCLUDED.search_title,
-            new_episodes = EXCLUDED.new_episodes,
-            is_anime = EXCLUDED.is_anime
+            new_episodes = EXCLUDED.new_episodes
         `
         )
         .bind(
@@ -140,8 +139,7 @@ export class PostgresStorage implements IStorage {
           record.total_time,
           record.save_time,
           record.search_title || '',
-          record.new_episodes || null,
-          record.is_anime ? 1 : 0
+          record.new_episodes || null
         )
         .run();
     } catch (err) {
@@ -392,7 +390,6 @@ export class PostgresStorage implements IStorage {
       save_time: row.save_time,
       search_title: row.search_title || '',
       new_episodes: row.new_episodes || undefined,
-      is_anime: row.is_anime === 1 || row.is_anime === true,
     };
   }
 

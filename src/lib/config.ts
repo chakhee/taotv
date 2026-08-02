@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console, @typescript-eslint/no-non-null-assertion */
 
 import { db } from '@/lib/db';
-import { normalizeApiBaseUrl } from '@/lib/url';
 
 import { AdminConfig } from './admin.types';
 
@@ -262,7 +261,7 @@ async function getInitConfig(
     ConfigFile: configSource,
     ConfigSubscribtion: subConfig,
     SiteConfig: {
-      SiteName: process.env.NEXT_PUBLIC_SITE_NAME || 'MoonTVPlus',
+      SiteName: process.env.NEXT_PUBLIC_SITE_NAME || 'MoonTV',
       Announcement:
         process.env.ANNOUNCEMENT ||
         '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
@@ -329,12 +328,6 @@ async function getInitConfig(
       TurnstileSiteKey: '',
       TurnstileSecretKey: '',
       DefaultUserTags: [],
-      // 流量统计配置
-      AnalyticsEnabled: false,
-      AnalyticsProvider: 'umami',
-      AnalyticsScriptUrl: '',
-      AnalyticsWebsiteId: '',
-      AnalyticsCustomScript: '',
     },
     UserConfig: {
       Users: [],
@@ -360,7 +353,6 @@ async function getInitConfig(
       : Array.isArray(cfgFile.specialSourceApis)
       ? cfgFile.specialSourceApis
       : [],
-    ClientAdSourceApis: [],
   };
 
   // 用户信息已迁移到新版数据库，不再填充 UserConfig.Users
@@ -596,22 +588,6 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   if (adminConfig.SiteConfig.DefaultUserTags === undefined) {
     adminConfig.SiteConfig.DefaultUserTags = [];
   }
-  // 流量统计配置补全
-  if (adminConfig.SiteConfig.AnalyticsEnabled === undefined) {
-    adminConfig.SiteConfig.AnalyticsEnabled = false;
-  }
-  if (adminConfig.SiteConfig.AnalyticsProvider === undefined) {
-    adminConfig.SiteConfig.AnalyticsProvider = 'umami';
-  }
-  if (adminConfig.SiteConfig.AnalyticsScriptUrl === undefined) {
-    adminConfig.SiteConfig.AnalyticsScriptUrl = '';
-  }
-  if (adminConfig.SiteConfig.AnalyticsWebsiteId === undefined) {
-    adminConfig.SiteConfig.AnalyticsWebsiteId = '';
-  }
-  if (adminConfig.SiteConfig.AnalyticsCustomScript === undefined) {
-    adminConfig.SiteConfig.AnalyticsCustomScript = '';
-  }
   if (!adminConfig.TelegramConfig) {
     adminConfig.TelegramConfig = {
       enabled: process.env.TELEGRAM_BOT_ENABLED === 'true' || Boolean(process.env.TELEGRAM_BOT_TOKEN),
@@ -676,12 +652,6 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   ) {
     adminConfig.SpecialSourceApis = [];
   }
-  if (
-    !adminConfig.ClientAdSourceApis ||
-    !Array.isArray(adminConfig.ClientAdSourceApis)
-  ) {
-    adminConfig.ClientAdSourceApis = [];
-  }
   adminConfig.LiveRefreshIntervalHours = normalizeLiveRefreshIntervalHours(
     adminConfig.LiveRefreshIntervalHours
   );
@@ -709,9 +679,6 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
     if (adminConfig.OpenListConfig.OfflineDownloadPassword === undefined) {
       adminConfig.OpenListConfig.OfflineDownloadPassword = '';
     }
-    if (adminConfig.OpenListConfig.PathMeta === undefined) {
-      adminConfig.OpenListConfig.PathMeta = {};
-    }
   }
 
   // 用户信息已迁移到新版数据库
@@ -738,9 +705,6 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   const validSourceKeys = new Set(adminConfig.SourceConfig.map((source) => source.key));
   adminConfig.SpecialSourceApis = Array.from(
     new Set((adminConfig.SpecialSourceApis || []).filter((key) => validSourceKeys.has(key)))
-  );
-  adminConfig.ClientAdSourceApis = Array.from(
-    new Set((adminConfig.ClientAdSourceApis || []).filter((key) => validSourceKeys.has(key)))
   );
 
   // 自定义分类去重
@@ -1047,100 +1011,6 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       adminConfig.OPDSConfig.CacheTTL = 10 * 60 * 1000;
     }
   }
-
-  // API Base URL 统一去尾斜杠，避免拼接路径时出现 //
-  const site = adminConfig.SiteConfig;
-  if (site) {
-    site.DoubanProxy = normalizeApiBaseUrl(site.DoubanProxy);
-    site.DoubanImageProxy = normalizeApiBaseUrl(site.DoubanImageProxy);
-    site.DanmakuApiBase = normalizeApiBaseUrl(site.DanmakuApiBase);
-    site.TMDBProxy = normalizeApiBaseUrl(site.TMDBProxy);
-    site.TMDBReverseProxy = normalizeApiBaseUrl(site.TMDBReverseProxy);
-    site.BangumiApiBaseUrl = normalizeApiBaseUrl(site.BangumiApiBaseUrl);
-    site.BangumiImageBaseUrl = normalizeApiBaseUrl(site.BangumiImageBaseUrl);
-    site.BangumiProxy = normalizeApiBaseUrl(site.BangumiProxy);
-    site.PansouApiUrl = normalizeApiBaseUrl(site.PansouApiUrl);
-    site.MagnetProxy = normalizeApiBaseUrl(site.MagnetProxy);
-    site.MagnetMikanReverseProxy = normalizeApiBaseUrl(
-      site.MagnetMikanReverseProxy
-    );
-    site.MagnetDmhyReverseProxy = normalizeApiBaseUrl(
-      site.MagnetDmhyReverseProxy
-    );
-    site.MagnetAcgripReverseProxy = normalizeApiBaseUrl(
-      site.MagnetAcgripReverseProxy
-    );
-    site.MagnetNyaaReverseProxy = normalizeApiBaseUrl(
-      site.MagnetNyaaReverseProxy
-    );
-    site.OIDCIssuer = normalizeApiBaseUrl(site.OIDCIssuer);
-  }
-
-  if (adminConfig.OpenListConfig) {
-    adminConfig.OpenListConfig.URL = normalizeApiBaseUrl(
-      adminConfig.OpenListConfig.URL
-    );
-    adminConfig.OpenListConfig.OfflineDownloadURL = normalizeApiBaseUrl(
-      adminConfig.OpenListConfig.OfflineDownloadURL
-    );
-  }
-
-  if (adminConfig.MusicConfig) {
-    adminConfig.MusicConfig.BaseUrl = normalizeApiBaseUrl(
-      adminConfig.MusicConfig.BaseUrl
-    );
-  }
-
-  if (adminConfig.XiaoyaConfig) {
-    adminConfig.XiaoyaConfig.ServerURL = normalizeApiBaseUrl(
-      adminConfig.XiaoyaConfig.ServerURL
-    );
-  }
-
-  if (adminConfig.SuwayomiConfig) {
-    adminConfig.SuwayomiConfig.ServerURL = normalizeApiBaseUrl(
-      adminConfig.SuwayomiConfig.ServerURL
-    );
-  }
-
-  if (adminConfig.EmbyConfig) {
-    if (adminConfig.EmbyConfig.ServerURL) {
-      adminConfig.EmbyConfig.ServerURL = normalizeApiBaseUrl(
-        adminConfig.EmbyConfig.ServerURL
-      );
-    }
-    if (Array.isArray(adminConfig.EmbyConfig.Sources)) {
-      adminConfig.EmbyConfig.Sources = adminConfig.EmbyConfig.Sources.map(
-        (source) => ({
-          ...source,
-          ServerURL: normalizeApiBaseUrl(source.ServerURL),
-        })
-      );
-    }
-  }
-
-  if (adminConfig.AIConfig) {
-    adminConfig.AIConfig.OpenAIBaseURL = normalizeApiBaseUrl(
-      adminConfig.AIConfig.OpenAIBaseURL
-    );
-    adminConfig.AIConfig.CustomBaseURL = normalizeApiBaseUrl(
-      adminConfig.AIConfig.CustomBaseURL
-    );
-    adminConfig.AIConfig.DecisionOpenAIBaseURL = normalizeApiBaseUrl(
-      adminConfig.AIConfig.DecisionOpenAIBaseURL
-    );
-    adminConfig.AIConfig.DecisionCustomBaseURL = normalizeApiBaseUrl(
-      adminConfig.AIConfig.DecisionCustomBaseURL
-    );
-  }
-
-  if (adminConfig.TelegramConfig) {
-    adminConfig.TelegramConfig.apiBaseUrl = normalizeApiBaseUrl(
-      adminConfig.TelegramConfig.apiBaseUrl
-    );
-  }
-
-  // 注意：OPDS source.url 是完整目录 URL，保留末尾 / 以便相对路径解析
 
   return adminConfig;
 }

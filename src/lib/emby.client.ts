@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { normalizeApiBaseUrl } from '@/lib/url';
-
 interface EmbyConfig {
   ServerURL: string;
   ApiKey?: string;
@@ -98,7 +96,7 @@ export class EmbyClient {
   private embyAuthorizationHeader: string;
 
   constructor(config: EmbyConfig) {
-    let serverUrl = normalizeApiBaseUrl(config.ServerURL);
+    let serverUrl = config.ServerURL.replace(/\/$/, '');
 
     // 存储高级选项
     this.removeEmbyPrefix = config.removeEmbyPrefix || false;
