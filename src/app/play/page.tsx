@@ -562,7 +562,7 @@ function PlayPageClient() {
         }
 
         setWebGPUSupported(true);
-        console.log('WebGPU支持检测：✅ 支持');
+        console.log('WebGPU支持检测：支持');
         console.log('Adapter limits:', {
           maxBufferSize: adapter.limits.maxBufferSize,
           maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize
@@ -4683,7 +4683,7 @@ function PlayPageClient() {
 
         setLoading(true);
         setLoadingStage('fetching');
-        setLoadingMessage('🎬 正在准备直链播放...');
+        setLoadingMessage('正在准备直链播放...');
 
         let directUrl = '';
         try {
@@ -4734,7 +4734,7 @@ function PlayPageClient() {
         window.history.replaceState({}, '', newUrl.toString());
 
         setLoadingStage('ready');
-        setLoadingMessage('✨ 准备就绪，即将开始播放...');
+        setLoadingMessage('准备就绪，即将开始播放...');
         setTimeout(() => {
           setLoading(false);
         }, 500);
@@ -4750,8 +4750,8 @@ function PlayPageClient() {
       setLoadingStage(currentSource && currentId ? 'fetching' : 'searching');
       setLoadingMessage(
         currentSource && currentId
-          ? '🎬 正在获取视频详情...'
-          : '🔍 正在搜索播放源...'
+          ? '正在获取视频详情...'
+          : '正在搜索播放源...'
       );
 
       // 如果已经有了source和id，优先通过单个详情接口快速获取
@@ -4850,7 +4850,7 @@ function PlayPageClient() {
         optimizationEnabled
       ) {
         setLoadingStage('preferring');
-        setLoadingMessage('⚡ 正在优选最佳播放源...');
+        setLoadingMessage('正在优选最佳播放源...');
 
         // 过滤掉 openlist、所有 emby 源和 xiaoya 源，它们不参与测速
         const sourcesToTest = sourcesInfo.filter(s => {
@@ -4942,7 +4942,7 @@ function PlayPageClient() {
       window.history.replaceState({}, '', newUrl.toString());
 
       setLoadingStage('ready');
-      setLoadingMessage('✨ 准备就绪，即将开始播放...');
+      setLoadingMessage('准备就绪，即将开始播放...');
 
       // 加载播放记录
       try {
@@ -6981,7 +6981,7 @@ function PlayPageClient() {
           playsInline: true,
           autoPlayback: false,
           airplay: true,
-          theme: '#22c55e',
+          theme: '#ec4899',
           lang: 'zh-cn',
           hotkey: false,
           fastForward: true,
@@ -7778,7 +7778,7 @@ function PlayPageClient() {
 
                 /* 标题栏 */
                 .ios-fullscreen-dialog-header {
-                  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
                   padding: 20px 24px;
                 }
                 .ios-fullscreen-dialog-title {
@@ -7823,8 +7823,8 @@ function PlayPageClient() {
                 }
                 .ios-fullscreen-option:hover {
                   background: rgb(243, 244, 246);
-                  border-color: #22c55e;
-                  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+                  border-color: #ec4899;
+                  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.18);
                 }
                 .dark .ios-fullscreen-option:hover {
                   background: rgb(55, 65, 81);
@@ -7835,7 +7835,7 @@ function PlayPageClient() {
 
                 /* 推荐选项 */
                 .ios-fullscreen-option-recommended {
-                  border-color: #22c55e;
+                  border-color: #ec4899;
                 }
 
                 /* 选项图标 */
@@ -7848,13 +7848,13 @@ function PlayPageClient() {
                   justify-content: center;
                   background: white;
                   border-radius: 10px;
-                  color: #22c55e;
+                  color: #ec4899;
                 }
                 .dark .ios-fullscreen-option-icon {
                   background: rgb(31, 41, 55);
                 }
                 .ios-fullscreen-option-recommended .ios-fullscreen-option-icon {
-                  background: #22c55e;
+                  background: #ec4899;
                   color: white;
                 }
 
@@ -7877,7 +7877,7 @@ function PlayPageClient() {
                 .ios-fullscreen-option-badge {
                   display: inline-block;
                   padding: 2px 8px;
-                  background: #22c55e;
+                  background: #ec4899;
                   color: white;
                   font-size: 12px;
                   font-weight: 500;
@@ -7903,7 +7903,7 @@ function PlayPageClient() {
                 }
                 .ios-fullscreen-option:hover .ios-fullscreen-option-arrow {
                   transform: translateX(4px);
-                  color: #22c55e;
+                  color: #ec4899;
                 }
 
                 /* 底部提示 */
@@ -8128,7 +8128,7 @@ function PlayPageClient() {
               }
 
               let thumbUrl = '';
-              let thumbColor = '#22c55e'; // 默认绿色
+              let thumbColor = '#ec4899'; // 默认粉色
 
               if (config.PROGRESS_THUMB_TYPE === 'preset' && config.PROGRESS_THUMB_PRESET_ID) {
                 const presetConfig: Record<string, { url: string; color: string }> = {
@@ -9496,10 +9496,10 @@ function PlayPageClient() {
             <div className='relative mb-8'>
               <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                 <div className='text-white text-4xl'>
-                  {loadingStage === 'searching' && '🔍'}
-                  {loadingStage === 'preferring' && '⚡'}
-                  {loadingStage === 'fetching' && '🎬'}
-                  {loadingStage === 'ready' && '✨'}
+                  {loadingStage === 'searching' && ''}
+                  {loadingStage === 'preferring' && ''}
+                  {loadingStage === 'fetching' && ''}
+                  {loadingStage === 'ready' && ''}
                 </div>
                 {/* 旋转光环 */}
                 <div className='absolute -inset-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
@@ -9585,7 +9585,7 @@ function PlayPageClient() {
               {/* 错误图标 */}
               <div className='relative mb-8'>
                 <div className='relative mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 shadow-2xl transition-transform duration-300 hover:scale-105'>
-                  <div className='text-4xl text-white'>😵</div>
+                  <div className='text-4xl text-white'>⚠</div>
                   {/* 脉冲效果 */}
                   <div className='absolute -inset-2 animate-pulse rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 opacity-20'></div>
                 </div>
@@ -10022,8 +10022,8 @@ function PlayPageClient() {
                           <div className='space-y-2'>
                             <p className='text-xl font-semibold text-white animate-pulse'>
                               {videoLoadingStage === 'sourceChanging'
-                                ? '🔄 切换播放源...'
-                                : '🔄 视频加载中...'}
+                                ? '切换播放源...'
+                                : '视频加载中...'}
                             </p>
                           </div>
                         </>
@@ -10072,7 +10072,7 @@ function PlayPageClient() {
                       </>
                     ) : (
                       <>
-                        <div className='w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin'></div>
+                        <div className='w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin'></div>
                         <span className='text-sm font-medium text-green-400'>
                           加载弹幕中...
                         </span>
@@ -10518,7 +10518,7 @@ function PlayPageClient() {
             <div className='grid grid-cols-1 md:grid-cols-5 lg:grid-cols-6 gap-4'>
               {/* 文字区 */}
               <div className='md:col-span-4 lg:col-span-5'>
-                <div className='p-6 flex flex-col min-h-0'>
+                <div className='bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-6 flex flex-col min-h-0'>
                   {/* 标题 */}
                   <h1 className={`text-3xl font-bold mb-2 tracking-wide flex items-center flex-shrink-0 text-center md:text-left w-full flex-wrap gap-2 ${tmdbBackdrop ? 'text-white' : 'text-gray-900 dark:text-gray-100'}`}>
                     <span className={doubanAka.length > 0 ? 'relative group cursor-help' : ''}>

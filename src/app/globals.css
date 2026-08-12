@@ -197,6 +197,18 @@ div[data-media-provider] video {
   background-color: #000 !important; /* 其余区域填充为黑色 */
 }
 
+/* 音量滑条圆点改为粉色 */
+.art-volume-panel .art-volume-indicator {
+  background-color: #ec4899 !important;
+  border-color: #ec4899 !important;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+}
+
+/* 弹幕插件开启勾图标改为粉色 */
+.art-video-player .apd-toggle-on path[fill="#00aeec"] {
+  fill: #ec4899 !important;
+}
+
 /* 隐藏移动端竖屏时的 pip 按钮 */
 @media (max-width: 768px) {
   .art-control-pip {
