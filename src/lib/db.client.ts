@@ -44,6 +44,7 @@ export interface PlayRecord {
   search_title?: string; // 搜索时使用的标题
   origin?: 'vod' | 'live'; // 来源类型
   new_episodes?: number; // 新增的剧集数量（用于显示更新提示）
+  is_anime?: boolean; // 是否判定为动漫
 }
 
 // ---- 收藏类型 ----

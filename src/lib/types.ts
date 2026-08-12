@@ -15,6 +15,7 @@ export interface PlayRecord {
   save_time: number; // 记录保存时间（时间戳）
   search_title: string; // 搜索时使用的标题
   new_episodes?: number; // 新增的剧集数量（用于显示更新提示）
+  is_anime?: boolean; // 是否判定为动漫
 }
 
 // 收藏数据结构
@@ -310,6 +311,7 @@ export interface SearchResult {
   rating?: number; // 评分
   initialEpisodeIndex?: number; // 初始集数索引（用于小雅源从文件点击进入时指定集数）
   metadataSource?: 'folder' | 'nfo' | 'tmdb' | 'file'; // 元数据来源（用于小雅源判断是否保留fileName）
+  refresh14m?: boolean; // OpenList/xiaoya 链接是否需要 14 分钟续期
 }
 
 // 豆瓣数据结构

@@ -4,7 +4,7 @@
 
 import { AlertCircle, Cloud, Heart, Keyboard, Loader2, Router, Sparkles, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent, type WheelEvent } from 'react';
 
 import { isAnimeCategoryText } from '@/lib/anime-keyword-expr';
 import { createAnime4KRenderer } from '@/lib/anime4k';
@@ -1469,7 +1469,7 @@ function PlayPageClient() {
         tmdbId: currentDetail.tmdb_id || resolvedTmdbId,
       });
 
-      setDetail((prev) => {
+      setDetail((prev: SearchResult | null) => {
         if (!prev || !isNetdiskSource(prev.source)) {
           return prev;
         }
@@ -1556,7 +1556,7 @@ function PlayPageClient() {
         tmdbId: currentDetail.tmdb_id || resolvedTmdbId,
       });
 
-      setDetail((prev) => prev && isNetdiskSource(prev.source) ? {
+      setDetail((prev: SearchResult | null) => prev && isNetdiskSource(prev.source) ? {
         ...prev,
         poster: prev.poster || pending.poster || '',
         year: prev.year || tmdbYear,
@@ -1587,7 +1587,7 @@ function PlayPageClient() {
   const [isRefreshingUrl, setIsRefreshingUrl] = useState(false); // 是否正在刷新链接
   const retryCountRef = useRef(0); // 重试计数
   const lastRefreshTimeRef = useRef(0); // 上次刷新时间
-  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null); // 14分钟定时器
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 14分钟定时器
   const currentXiaoyaUrlRef = useRef<string>(''); // 当前xiaoya原始URL（用于刷新）
   const isInitialLoadRef = useRef(true); // 标记是否为首次加载
   // xiaoya 仅 m3u8 可续期；openlist 由 refresh14m 决定。用于 startRefreshTimer 自身兜底校验
@@ -1930,7 +1930,7 @@ function PlayPageClient() {
   // 播放器就绪状态（用于触发 usePlaySync 的事件监听器设置）
   const [playerReady, setPlayerReady] = useState(false);
 
-  const handleFallbackRecommendationsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+  const handleFallbackRecommendationsWheel = (e: WheelEvent<HTMLDivElement>) => {
     const container = fallbackRecommendationsRowRef.current;
     if (!container) return;
 
@@ -1951,7 +1951,7 @@ function PlayPageClient() {
     container.scrollLeft = Math.max(0, Math.min(maxScrollLeft, nextScrollLeft));
   };
 
-  const handleFallbackRecommendationsMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleFallbackRecommendationsMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     const container = fallbackRecommendationsRowRef.current;
     if (!container || container.scrollWidth <= container.clientWidth) return;
     if (e.button !== 0) return;
@@ -1961,7 +1961,7 @@ function PlayPageClient() {
     fallbackRecommendationsDragStartScrollLeftRef.current = container.scrollLeft;
   };
 
-  const handleFallbackRecommendationsMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleFallbackRecommendationsMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     const container = fallbackRecommendationsRowRef.current;
     if (!container || !fallbackRecommendationsDraggingRef.current) return;
 
@@ -1974,7 +1974,7 @@ function PlayPageClient() {
   };
 
   // 播放进度保存相关
-  const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const saveIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
   const lastSavedPlayTimeRef = useRef<number | null>(null);
 
@@ -2350,7 +2350,7 @@ function PlayPageClient() {
   };
 
   const handleCustomSubtitleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -5063,7 +5063,8 @@ function PlayPageClient() {
       }
 
       const targetSource = availableSources.find(
-        (source) => source.source === urlSource && source.id === urlId
+        (source: SearchResult) =>
+          source.source === urlSource && source.id === urlId
       );
 
       if (targetSource) {
@@ -5202,7 +5203,8 @@ function PlayPageClient() {
       }
 
       let newDetail: SearchResult | undefined = availableSources.find(
-        (source) => source.source === newSource && source.id === newId
+        (source: SearchResult) =>
+          source.source === newSource && source.id === newId
       );
       if (!newDetail) {
         setError('未找到匹配结果');
@@ -6654,7 +6656,7 @@ function PlayPageClient() {
       }
 
       // 更新 availableSources 中的小雅源信息
-      setAvailableSources(prevSources => applyCorrectionsToSources(prevSources));
+      setAvailableSources((prevSources: SearchResult[]) => applyCorrectionsToSources(prevSources));
 
       console.log('已应用纠错信息');
     }
@@ -6988,7 +6990,7 @@ function PlayPageClient() {
           autoOrientation: true,
           lock: true,
           ...(videoQualities.length > 0 ? {
-            quality: videoQualities.map((q, index) => ({
+            quality: videoQualities.map((q: { name: string; url: string }, index: number) => ({
               default: index === 0,
               html: q.name,
               url: q.url,
@@ -7435,7 +7437,7 @@ function PlayPageClient() {
               name: '跳过片头片尾',
               html: '跳过片头片尾',
               switch: skipConfigRef.current.enable,
-              onSwitch: function (item) {
+              onSwitch: function (item: { switch: boolean }) {
                 const newConfig = {
                   ...skipConfigRef.current,
                   enable: !item.switch,
