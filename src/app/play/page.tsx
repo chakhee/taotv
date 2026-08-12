@@ -4,7 +4,7 @@
 
 import { AlertCircle, Cloud, Heart, Keyboard, Loader2, Router, Sparkles, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useRef, useState, type ChangeEvent, type WheelEvent } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type WheelEvent } from 'react';
 
 import { isAnimeCategoryText } from '@/lib/anime-keyword-expr';
 import { createAnime4KRenderer } from '@/lib/anime4k';
@@ -1951,7 +1951,7 @@ function PlayPageClient() {
     container.scrollLeft = Math.max(0, Math.min(maxScrollLeft, nextScrollLeft));
   };
 
-  const handleFallbackRecommendationsMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+  const handleFallbackRecommendationsMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
     const container = fallbackRecommendationsRowRef.current;
     if (!container || container.scrollWidth <= container.clientWidth) return;
     if (e.button !== 0) return;
@@ -1961,7 +1961,7 @@ function PlayPageClient() {
     fallbackRecommendationsDragStartScrollLeftRef.current = container.scrollLeft;
   };
 
-  const handleFallbackRecommendationsMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+  const handleFallbackRecommendationsMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
     const container = fallbackRecommendationsRowRef.current;
     if (!container || !fallbackRecommendationsDraggingRef.current) return;
 
