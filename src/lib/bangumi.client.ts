@@ -175,3 +175,7 @@ export async function getBangumiSubject(
     `/v0/subjects/${encodeURIComponent(String(id))}`
   );
 }
+
+export function getBangumiSubjectUrl(id: number | string): string {
+  return `https://bgm.tv/subject/${encodeURIComponent(String(id))}`;
+}

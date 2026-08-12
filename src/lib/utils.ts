@@ -214,6 +214,43 @@ function getBangumiImageFallbackSignature(): string {
   });
 }
 
+export async function ensureBangumiImagePrimaryProbed(): Promise<boolean> {
+  // 非浏览器环境无需探测，默认认为可达。
+  if (typeof window === 'undefined') {
+    return true;
+  }
+
+  const primary = getPrimaryBangumiImageSource();
+  // 服务端代理模式由本站转发，不做外网可达性探测。
+  if (primary === 'server-proxy') {
+    return true;
+  }
+
+  const probeUrl =
+    primary === 'custom-baseurl'
+      ? `${normalizeBaseUrl(getBangumiImageBaseUrl())}/v0/calendar`
+      : 'https://api.bgm.tv/v0/calendar';
+
+  try {
+    const response = await fetch(probeUrl, {
+      method: 'GET',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (response.ok) {
+      clearBangumiImageFallbackCache();
+      return true;
+    }
+
+    markBangumiImageFallbackActive();
+    return false;
+  } catch {
+    markBangumiImageFallbackActive();
+    return false;
+  }
+}
+
 export function clearBangumiImageFallbackCache(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(BANGUMI_IMAGE_FALLBACK_UNTIL_KEY);
