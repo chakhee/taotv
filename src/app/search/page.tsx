@@ -62,8 +62,9 @@ type SearchCachePayload = {
 function SearchPageClient() {
   // 搜索历史
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  // 返回顶部按钮显示状�?  const [showBackToTop, setShowBackToTop] = useState(false);
-  // 选项卡状�? 'video' �?'pansou' �?'acg'
+  // 返回顶部按钮显示状态
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  // 选项卡状态: 'video' 或 'pansou' 或 'acg'
   const [activeTab, setActiveTab] = useState<'video' | 'pansou' | 'acg'>(
     'video'
   );
@@ -91,7 +92,8 @@ function SearchPageClient() {
   const [featureFlagsReady, setFeatureFlagsReady] = useState(false);
   // 繁体转简体转换器
   const converterRef = useRef<((text: string) => string) | null>(null);
-  // 转换器是否已初始�?  const [converterReady, setConverterReady] = useState(false);
+  // 转换器是否已初始化
+  const [converterReady, setConverterReady] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -108,7 +110,8 @@ function SearchPageClient() {
   const pendingResultsRef = useRef<SearchResult[]>([]);
   const flushTimerRef = useRef<number | null>(null);
   const [useFluidSearch, setUseFluidSearch] = useState(true);
-  // 聚合卡片 refs 与聚合统计缓�?  const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle>>>(
+  // 聚合卡片 refs 与聚合统计缓存
+  const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle>>>(
     new Map()
   );
   const groupStatsRef = useRef<
@@ -117,9 +120,12 @@ function SearchPageClient() {
       { douban_id?: number; episodes?: number; source_names: string[] }
     >
   >(new Map());
-  // 强制刷新状�?  const [forceRefresh, setForceRefresh] = useState(false);
-  // 是否使用了缓存结�?  const [isFromCache, setIsFromCache] = useState(false);
-  // 精确搜索开�?  const [exactSearch, setExactSearch] = useState(true);
+  // 强制刷新状态
+  const [forceRefresh, setForceRefresh] = useState(false);
+  // 是否使用了缓存结果
+  const [isFromCache, setIsFromCache] = useState(false);
+  // 精确搜索开关
+  const [exactSearch, setExactSearch] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [privateLibraryOnly, setPrivateLibraryOnly] = useState(false);
   const [privateLibraryOnlyReady, setPrivateLibraryOnlyReady] = useState(false);
@@ -127,7 +133,8 @@ function SearchPageClient() {
   const advancedButtonRefs = useRef<HTMLButtonElement[]>([]);
   const advancedDropdownRefs = useRef<HTMLDivElement[]>([]);
 
-  // 生成缓存�?  const getCacheKey = (query: string) => {
+  // 生成缓存键
+  const getCacheKey = (query: string) => {
     const suffixParts = [
       isSpecialSourcesEnabledOnDevice() ? 'special' : '',
       privateLibraryOnly ? 'private' : '',
@@ -136,7 +143,7 @@ function SearchPageClient() {
     return `search_cache_${query.trim()}${suffix}`;
   };
 
-  // �?sessionStorage 获取完整缓存的搜索结果（partial 只给播放页快速启动使用）
+  // 从 sessionStorage 获取完整缓存的搜索结果（partial 只给播放页快速启动使用）
   const getCachedResults = (query: string): SearchResult[] | null => {
     if (typeof window === 'undefined') return null;
     try {
@@ -154,7 +161,7 @@ function SearchPageClient() {
     return null;
   };
 
-  // 保存搜索结果�?sessionStorage
+  // 保存搜索结果到 sessionStorage
   const setCachedResults = (
     query: string,
     results: SearchResult[],
@@ -185,7 +192,8 @@ function SearchPageClient() {
     }
   };
 
-  // 清除指定查询的缓�?  const clearCachedResults = (query: string) => {
+  // 清除指定查询的缓存
+  const clearCachedResults = (query: string) => {
     if (typeof window === 'undefined') return;
     try {
       const cacheKey = getCacheKey(query);
@@ -302,7 +310,8 @@ function SearchPageClient() {
     alt: string;
   } | null>(null);
 
-  // 在“无排序”场景用于每个源批次的预排序：完全匹配标题优先，其次年份倒序，未知年份最�?  const sortBatchForNoOrder = (items: SearchResult[]) => {
+  // 在“无排序”场景用于每个源批次的预排序：完全匹配标题优先，其次年份倒序，未知年份最后
+  const sortBatchForNoOrder = (items: SearchResult[]) => {
     const q = currentQueryRef.current.trim();
     return items.slice().sort((a, b) => {
       const aExact = (a.title || '').trim() === q;
@@ -321,12 +330,14 @@ function SearchPageClient() {
     });
   };
 
-  // 简化的年份排序：unknown/空值始终在最�?  const compareYear = (
+  // 简化的年份排序：unknown/空值始终在最后
+  const compareYear = (
     aYear: string,
     bYear: string,
     order: 'none' | 'asc' | 'desc'
   ) => {
-    // 如果是无排序状态，返回0（保持原顺序�?    if (order === 'none') return 0;
+    // 如果是无排序状态，返回0（保持原顺序）
+    if (order === 'none') return 0;
 
     // 处理空值和unknown
     const aIsEmpty = !aYear || aYear === 'unknown';
@@ -343,13 +354,18 @@ function SearchPageClient() {
     return order === 'asc' ? aNum - bNum : bNum - aNum;
   };
 
-  // 规范化标题用于聚合（去除特殊符号、括号、空格和全角空格�?  const normalizeTitle = (title: string) => {
+  // 规范化标题用于聚合（去除特殊符号、括号、空格和全角空格）
+  const normalizeTitle = (title: string) => {
     return title
-      .replace(/[\s\u3000]/g, '') // 去除空格和全角空�?      .replace(/[()（）[\]【】{}「」『�?>《》]/g, '') // 去除各种括号
-      .replace(/[^\w\u4e00-\u9fa5]/g, ''); // 去除特殊符号，保留字母、数字、下划线和中�?  };
+      .replace(/[\s\u3000]/g, '') // 去除空格和全角空格
+      .replace(/[()（）[\]【】{}「」『』<>《》]/g, '') // 去除各种括号
+      .replace(/[^\w\u4e00-\u9fa5]/g, ''); // 去除特殊符号，保留字母、数字、下划线和中文
+  };
 
-  // 辅助函数：获取视频类�?  const getType = (item: SearchResult): 'movie' | 'tv' => {
-    // 1. Emby �?OpenList 源：使用 type_name（基�?TMDB，最可靠�?    if (
+  // 辅助函数：获取视频类型
+  const getType = (item: SearchResult): 'movie' | 'tv' => {
+    // 1. Emby 和 OpenList 源：使用 type_name（基于 TMDB，最可靠）
+    if (
       item.source === 'emby' ||
       item.source?.startsWith('emby_') ||
       item.source === 'openlist'
@@ -360,16 +376,18 @@ function SearchPageClient() {
     // 2. API 采集源：综合判断
     const typeName = item.type_name?.toLowerCase() || '';
 
-    // 2.1 明确包含"电影"�?movie"�?�?的，判断为电�?    if (
+    // 2.1 明确包含"电影"或"movie"或"片"的，判断为电影
+    if (
       typeName.includes('电影') ||
       typeName.includes('movie') ||
-      (typeName.endsWith('�?) && !typeName.includes('动漫'))
+      (typeName.endsWith('片') && !typeName.includes('动漫'))
     ) {
       return 'movie';
     }
 
-    // 2.2 包含"�?�?动漫"�?综艺"等关键词的，判断为剧�?    if (
-      typeName.includes('�?) ||
+    // 2.2 包含"剧"、"动漫"、"综艺"等关键词的，判断为剧集
+    if (
+      typeName.includes('剧') ||
       typeName.includes('动漫') ||
       typeName.includes('综艺') ||
       typeName.includes('anime')
@@ -377,7 +395,7 @@ function SearchPageClient() {
       return 'tv';
     }
 
-    // 2.3 检�?episodes_titles：如果包�?第X�?，判断为剧集
+    // 2.3 检查 episodes_titles：如果包含"第X集"，判断为剧集
     if (item.episodes_titles && item.episodes_titles.length > 0) {
       const firstTitle = item.episodes_titles[0] || '';
       if (/第\d+集|第\d+话|EP?\d+/i.test(firstTitle)) {
@@ -385,13 +403,14 @@ function SearchPageClient() {
       }
     }
 
-    // 2.4 兜底：使�?episodes.length（最不可靠）
+    // 2.4 兜底：使用 episodes.length（最不可靠）
     return item.episodes.length === 1 ? 'movie' : 'tv';
   };
 
   // 辅助函数：检查标题是否包含搜索词（用于精确搜索）
   const titleContainsQuery = (title: string, query: string): boolean => {
-    if (!exactSearch) return true; // 如果未开启精确搜索，不过�?    if (!query || !title) return true; // 如果没有搜索词或标题，不过滤
+    if (!exactSearch) return true; // 如果未开启精确搜索，不过滤
+    if (!query || !title) return true; // 如果没有搜索词或标题，不过滤
 
     const normalizedTitle = title.toLowerCase();
     const normalizedQuery = query.toLowerCase();
@@ -422,7 +441,7 @@ function SearchPageClient() {
       preliminaryMap.set(preliminaryKey, arr);
     });
 
-    //===== 阶段2：智能年份推断和最终分�?=====
+    //===== 阶段2：智能年份推断和最终分组 =====
     const finalMap = new Map<string, SearchResult[]>();
     const keyOrder: string[] = [];
 
@@ -434,18 +453,19 @@ function SearchPageClient() {
       group.forEach((item) => {
         const year = item.year;
 
-        // 判断是否为有效年份：必须�?位数字，且不能是空字符串�?unknown'
+        // 判断是否为有效年份：必须是4位数字，且不能是空字符串或'unknown'
         if (
           year &&
           year.trim() !== '' &&
           year !== 'unknown' &&
           /^\d{4}$/.test(year)
         ) {
-          // 有有效年�?          const arr = withYear.get(year) || [];
+          // 有有效年份
+          const arr = withYear.get(year) || [];
           arr.push(item);
           withYear.set(year, arr);
         } else {
-          // 无年份（包括空字符串�?unknown'、null、undefined等）
+          // 无年份（包括空字符串、'unknown'、null、undefined等）
           withoutYear.push(item);
         }
       });
@@ -455,30 +475,33 @@ function SearchPageClient() {
         // 将无年份的结果复制到每个有年份的组中
         withYear.forEach((yearGroup, year) => {
           const finalKey = `${preliminaryKey}-${year}`;
-          // 合并：有年份�?+ 无年份的（复制）
+          // 合并：有年份的 + 无年份的（复制）
           const mergedGroup = [...yearGroup, ...withoutYear];
           finalMap.set(finalKey, mergedGroup);
           keyOrder.push(finalKey);
         });
       } else if (withoutYear.length > 0) {
-        // 如果完全没有年份信息，单独成�?        const finalKey = `${preliminaryKey}-unknown`;
+        // 如果完全没有年份信息，单独成组
+        const finalKey = `${preliminaryKey}-unknown`;
         finalMap.set(finalKey, withoutYear);
         keyOrder.push(finalKey);
       }
     });
 
-    // 按出现顺序返回聚合结�?    return keyOrder.map(
+    // 按出现顺序返回聚合结果
+    return keyOrder.map(
       (key) => [key, finalMap.get(key)!] as [string, SearchResult[]]
     );
   }, [allExactSearchResults]);
 
-  // 当聚合结果变化时，如果某个聚合已存在，则调用其卡�?ref �?set 方法增量更新
+  // 当聚合结果变化时，如果某个聚合已存在，则调用其卡片 ref 的 set 方法增量更新
   useEffect(() => {
     aggregatedResults.forEach(([mapKey, group]) => {
       const stats = computeGroupStats(group);
       const prev = groupStatsRef.current.get(mapKey);
       if (!prev) {
-        // 第一次出现，记录初始值，不调�?ref（由初始 props 渲染�?        groupStatsRef.current.set(mapKey, stats);
+        // 第一次出现，记录初始值，不调用 ref（由初始 props 渲染）
+        groupStatsRef.current.set(mapKey, stats);
         return;
       }
       // 对比变化并调用对应的 set 方法
@@ -694,9 +717,10 @@ function SearchPageClient() {
       return filtered;
     }
 
-    // 简化排序：1. 年份排序�?. 年份相同时精确匹配在前，3. 标题排序
+    // 简化排序：1. 年份排序，2. 年份相同时精确匹配在前，3. 标题排序
     return filtered.sort((a, b) => {
-      // 首先按年份排�?      const yearComp = compareYear(a.year, b.year, yearOrder);
+      // 首先按年份排序
+      const yearComp = compareYear(a.year, b.year, yearOrder);
       if (yearComp !== 0) return yearComp;
 
       // 年份相同时，精确匹配在前
@@ -705,7 +729,8 @@ function SearchPageClient() {
       if (aExactMatch && !bExactMatch) return -1;
       if (!aExactMatch && bExactMatch) return 1;
 
-      // 最后按标题排序，正序时字母序，倒序时反字母�?      return yearOrder === 'asc'
+      // 最后按标题排序，正序时字母序，倒序时反字母序
+      return yearOrder === 'asc'
         ? a.title.localeCompare(b.title)
         : b.title.localeCompare(a.title);
     });
@@ -725,13 +750,15 @@ function SearchPageClient() {
       return true;
     });
 
-    // 如果是无排序状态，保持按关键字+年份+类型出现的原始顺�?    if (yearOrder === 'none') {
+    // 如果是无排序状态，保持按关键字+年份+类型出现的原始顺序
+    if (yearOrder === 'none') {
       return filtered;
     }
 
-    // 简化排序：1. 年份排序�?. 年份相同时精确匹配在前，3. 标题排序
+    // 简化排序：1. 年份排序，2. 年份相同时精确匹配在前，3. 标题排序
     return filtered.sort((a, b) => {
-      // 首先按年份排�?      const aYear = a[1][0].year;
+      // 首先按年份排序
+      const aYear = a[1][0].year;
       const bYear = b[1][0].year;
       const yearComp = compareYear(aYear, bYear, yearOrder);
       if (yearComp !== 0) return yearComp;
@@ -742,7 +769,8 @@ function SearchPageClient() {
       if (aExactMatch && !bExactMatch) return -1;
       if (!aExactMatch && bExactMatch) return 1;
 
-      // 最后按标题排序，正序时字母序，倒序时反字母�?      const aTitle = a[1][0].title;
+      // 最后按标题排序，正序时字母序，倒序时反字母序
+      const aTitle = a[1][0].title;
       const bTitle = b[1][0].title;
       return yearOrder === 'asc'
         ? aTitle.localeCompare(bTitle)
@@ -777,7 +805,7 @@ function SearchPageClient() {
       totalCount,
       isFiltered: visibleCount !== totalCount,
       modeLabel: isAggregateView ? '聚合结果' : '搜索结果',
-      unit: isAggregateView ? '�? : '�?,
+      unit: isAggregateView ? '组' : '条',
     };
   }, [
     viewMode,
@@ -1018,7 +1046,7 @@ function SearchPageClient() {
     if (activeTab === 'pansou' && searchQuery.trim() && showResults) {
       setTriggerPansouSearch((prev) => !prev);
     }
-    // 如果切换�?ACG 磁力搜索选项卡，且有搜索关键词，且已显示结果，则触发搜索
+    // 如果切换到 ACG 磁力搜索选项卡，且有搜索关键词，且已显示结果，则触发搜索
     if (activeTab === 'acg' && searchQuery.trim() && showResults) {
       setTriggerAcgSearch((prev) => !prev);
     }
@@ -1044,11 +1072,13 @@ function SearchPageClient() {
             setConverterReady(true);
           } catch (error) {
             console.error('初始化繁体转简体转换器失败:', error);
-            setConverterReady(true); // 即使失败也设置为 true，避免阻�?          }
+            setConverterReady(true); // 即使失败也设置为 true，避免阻塞
+          }
         })
         .catch((error) => {
           console.error('加载 opencc-js 失败:', error);
-          setConverterReady(true); // 即使失败也设置为 true，避免阻�?        });
+          setConverterReady(true); // 即使失败也设置为 true，避免阻塞
+        });
     } else {
       setConverterReady(true);
     }
@@ -1091,12 +1121,13 @@ function SearchPageClient() {
       }
     );
 
-    // 获取滚动位置的函�?- 专门针对 body 滚动
+    // 获取滚动位置的函数 - 专门针对 body 滚动
     const getScrollTop = () => {
       return document.body.scrollTop || 0;
     };
 
-    // 使用 requestAnimationFrame 持续检测滚动位�?    let isRunning = false;
+    // 使用 requestAnimationFrame 持续检测滚动位置
+    let isRunning = false;
     const checkScrollPosition = () => {
       if (!isRunning) return;
 
@@ -1107,10 +1138,12 @@ function SearchPageClient() {
       requestAnimationFrame(checkScrollPosition);
     };
 
-    // 启动持续检�?    isRunning = true;
+    // 启动持续检测
+    isRunning = true;
     checkScrollPosition();
 
-    // 监听 body 元素的滚动事�?    const handleScroll = () => {
+    // 监听 body 元素的滚动事件
+    const handleScroll = () => {
       const scrollTop = getScrollTop();
       setShowBackToTop(scrollTop > 300);
     };
@@ -1121,7 +1154,8 @@ function SearchPageClient() {
       unsubscribe();
       isRunning = false; // 停止 requestAnimationFrame 循环
 
-      // 移除 body 滚动事件监听�?      document.body.removeEventListener('scroll', handleScroll);
+      // 移除 body 滚动事件监听器
+      document.body.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -1158,11 +1192,13 @@ function SearchPageClient() {
   ]);
 
   useEffect(() => {
-    // 等待转换器和私人影库搜索设置初始化完�?    if (!converterReady || !privateLibraryOnlyReady) {
+    // 等待转换器和私人影库搜索设置初始化完成
+    if (!converterReady || !privateLibraryOnlyReady) {
       return;
     }
 
-    // 当搜索参数变化时更新搜索状�?    let query = searchParams.get('q') || '';
+    // 当搜索参数变化时更新搜索状态
+    let query = searchParams.get('q') || '';
 
     // 如果开启了繁体转简体，进行转换
     if (query && typeof window !== 'undefined') {
@@ -1175,10 +1211,11 @@ function SearchPageClient() {
           const originalQuery = query;
           query = converterRef.current(query);
 
-          // 如果转换后的文本与原文本不同，更�?URL
+          // 如果转换后的文本与原文本不同，更新 URL
           if (originalQuery !== query) {
             const trimmedConverted = query.trim();
-            // 使用 replace 而不�?push，避免在历史记录中留下繁体版�?            router.replace(
+            // 使用 replace 而不是 push，避免在历史记录中留下繁体版本
+            router.replace(
               `/search?q=${encodeURIComponent(trimmedConverted)}${
                 searchParams.get('type')
                   ? `&type=${searchParams.get('type')}`
@@ -1188,7 +1225,7 @@ function SearchPageClient() {
             return; // 等待 URL 更新后重新触发此 effect
           }
         } catch (error) {
-          console.error('[URL参数监听] 繁体转简体转换失�?', error);
+          console.error('[URL参数监听] 繁体转简体转换失败:', error);
         }
       }
     }
@@ -1235,16 +1272,20 @@ function SearchPageClient() {
 
       const trimmed = query.trim();
 
-      // 检查是否有缓存且不是强制刷�?      if (!forceRefresh) {
+      // 检查是否有缓存且不是强制刷新
+      if (!forceRefresh) {
         const cachedResults = getCachedResults(trimmed);
         if (cachedResults && cachedResults.length > 0) {
-          // 使用缓存的结�?          setIsLoading(false); // 先设置加载状态为 false
+          // 使用缓存的结果
+          setIsLoading(false); // 先设置加载状态为 false
           setSearchResults(cachedResults);
           setShowResults(true);
           setTotalSources(1);
           setCompletedSources(1);
           setShowSuggestions(false);
-          setIsFromCache(true); // 标记为缓存结�?          // 保存到搜索历�?          addSearchHistory(query);
+          setIsFromCache(true); // 标记为缓存结果
+          // 保存到搜索历史
+          addSearchHistory(query);
           return;
         }
       }
@@ -1291,7 +1332,8 @@ function SearchPageClient() {
         }
       }
 
-      // 如果读取的配置与当前状态不同，更新状�?      if (currentFluidSearch !== useFluidSearch) {
+      // 如果读取的配置与当前状态不同，更新状态
+      if (currentFluidSearch !== useFluidSearch) {
         setUseFluidSearch(currentFluidSearch);
       }
 
@@ -1319,7 +1361,8 @@ function SearchPageClient() {
                   Array.isArray(payload.results) &&
                   payload.results.length > 0
                 ) {
-                  // 缓冲新增结果，节流刷入，避免频繁重渲染导致闪�?                  const activeYearOrder =
+                  // 缓冲新增结果，节流刷入，避免频繁重渲染导致闪烁
+                  const activeYearOrder =
                     viewMode === 'agg'
                       ? filterAgg.yearOrder
                       : filterAll.yearOrder;
@@ -1357,7 +1400,8 @@ function SearchPageClient() {
                   startTransition(() => {
                     setSearchResults((prev) => {
                       const newResults = prev.concat(toAppend);
-                      // 缓存完整的搜索结�?                      setCachedResults(trimmed, newResults);
+                      // 缓存完整的搜索结果
+                      setCachedResults(trimmed, newResults);
                       return newResults;
                     });
                   });
@@ -1402,7 +1446,8 @@ function SearchPageClient() {
           }
         };
       } else {
-        // 传统搜索：使用普通接�?        const searchUrl = `/api/search?q=${encodeURIComponent(trimmed)}${
+        // 传统搜索：使用普通接口
+        const searchUrl = `/api/search?q=${encodeURIComponent(trimmed)}${
           privateLibraryOnly ? '&privateOnly=1' : ''
         }`;
         fetch(appendSpecialSourceParam(searchUrl))
@@ -1432,7 +1477,7 @@ function SearchPageClient() {
       }
       setShowSuggestions(false);
 
-      // 保存到搜索历�?(事件监听会自动更新界�?
+      // 保存到搜索历史 (事件监听会自动更新界面)
       addSearchHistory(query);
     } else {
       setShowResults(false);
@@ -1473,7 +1518,8 @@ function SearchPageClient() {
     featureFlagsReady,
   ]);
 
-  // 组件卸载时，关闭可能存在的连�?  useEffect(() => {
+  // 组件卸载时，关闭可能存在的连接
+  useEffect(() => {
     return () => {
       if (eventSourceRef.current) {
         try {
@@ -1489,7 +1535,8 @@ function SearchPageClient() {
     };
   }, []);
 
-  // 输入框内容变化时触发，显示搜索建�?  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 输入框内容变化时触发，显示搜索建议
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
 
@@ -1500,7 +1547,8 @@ function SearchPageClient() {
     }
   };
 
-  // 搜索框聚焦时触发，显示搜索建�?  const handleInputFocus = () => {
+  // 搜索框聚焦时触发，显示搜索建议
+  const handleInputFocus = () => {
     if (searchQuery.trim()) {
       setShowSuggestions(true);
     }
@@ -1521,22 +1569,23 @@ function SearchPageClient() {
         try {
           trimmed = converterRef.current(trimmed);
         } catch (error) {
-          console.error('繁体转简体转换失�?', error);
+          console.error('繁体转简体转换失败:', error);
         }
       }
     }
 
-    // 回显搜索�?    setSearchQuery(trimmed);
+    // 回显搜索框
+    setSearchQuery(trimmed);
     setShowResults(true);
     setShowSuggestions(false);
-    // 立即设置加载状态，避免显示"未找到相关结�?
+    // 立即设置加载状态，避免显示"未找到相关结果"
     setIsLoading(true);
 
     // 根据当前选项卡执行不同的搜索
     if (activeTab === 'video') {
       // 影视搜索
       router.push(`/search?q=${encodeURIComponent(trimmed)}&type=video`);
-      // 其余�?searchParams 变化�?effect 处理
+      // 其余由 searchParams 变化的 effect 处理
     } else if (activeTab === 'pansou') {
       // 网盘搜索 - 触发搜索
       router.push(`/search?q=${encodeURIComponent(trimmed)}&type=pansou`);
@@ -1560,7 +1609,7 @@ function SearchPageClient() {
         try {
           processedSuggestion = converterRef.current(suggestion);
         } catch (error) {
-          console.error('繁体转简体转换失�?', error);
+          console.error('繁体转简体转换失败:', error);
         }
       }
     }
@@ -1570,7 +1619,7 @@ function SearchPageClient() {
 
     // 自动执行搜索
     setShowResults(true);
-    // 立即设置加载状态，避免显示"未找到相关结�?
+    // 立即设置加载状态，避免显示"未找到相关结果"
     setIsLoading(true);
 
     // 根据当前选项卡执行不同的搜索
@@ -1579,7 +1628,7 @@ function SearchPageClient() {
       router.push(
         `/search?q=${encodeURIComponent(processedSuggestion)}&type=video`
       );
-      // 其余�?searchParams 变化�?effect 处理
+      // 其余由 searchParams 变化的 effect 处理
     } else if (activeTab === 'pansou') {
       // 网盘搜索 - 触发搜索
       router.push(
@@ -1707,13 +1756,14 @@ function SearchPageClient() {
   // 返回顶部功能
   const scrollToTop = () => {
     try {
-      // 根据调试结果，真正的滚动容器�?document.body
+      // 根据调试结果，真正的滚动容器是 document.body
       document.body.scrollTo({
         top: 0,
         behavior: 'smooth',
       });
     } catch (error) {
-      // 如果平滑滚动完全失败，使用立即滚�?      document.body.scrollTop = 0;
+      // 如果平滑滚动完全失败，使用立即滚动
+      document.body.scrollTop = 0;
     }
   };
 
@@ -1721,7 +1771,7 @@ function SearchPageClient() {
   const handleTabChange = (newTab: 'video' | 'pansou' | 'acg') => {
     setActiveTab(newTab);
 
-    // 如果有搜索关键词，更�?URL
+    // 如果有搜索关键词，更新 URL
     const currentQuery = searchParams.get('q');
     if (currentQuery) {
       router.push(
@@ -1733,7 +1783,7 @@ function SearchPageClient() {
   return (
     <PageLayout activePath='/search'>
       <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible mb-10'>
-        {/* 搜索�?*/}
+        {/* 搜索框 */}
         <div className='mb-0'>
           <form onSubmit={handleSearch} className='max-w-2xl mx-auto'>
             <div className='relative'>
@@ -1772,10 +1822,12 @@ function SearchPageClient() {
                 onSelect={handleSuggestionSelect}
                 onClose={() => setShowSuggestions(false)}
                 onEnterKey={() => {
-                  // 当用户按回车键时，使用搜索框的实际内容进行搜�?                  const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
+                  // 当用户按回车键时，使用搜索框的实际内容进行搜索
+                  const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
                   if (!trimmed) return;
 
-                  // 回显搜索�?                  setSearchQuery(trimmed);
+                  // 回显搜索框
+                  setSearchQuery(trimmed);
                   setShowResults(true);
                   setShowSuggestions(false);
                   router.push(
@@ -1791,7 +1843,7 @@ function SearchPageClient() {
             </div>
           </form>
 
-          {/* 选项�?*/}
+          {/* 选项卡 */}
           <div className='flex justify-center mt-6'>
             <CapsuleSwitch
               options={[
@@ -1879,7 +1931,7 @@ function SearchPageClient() {
                             setViewMode(viewMode === 'agg' ? 'all' : 'agg')
                           }
                         />
-                        <div className='h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-pink-500 dark:bg-gray-600'></div>
+                        <div className='h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-green-500 dark:bg-gray-600'></div>
                         <div className='absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4'></div>
                       </div>
                     </label>
@@ -1896,7 +1948,7 @@ function SearchPageClient() {
                             setPrivateLibraryOnly(e.target.checked)
                           }
                         />
-                        <div className='h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-pink-500 dark:bg-gray-600'></div>
+                        <div className='h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-green-500 dark:bg-gray-600'></div>
                         <div className='absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4'></div>
                       </div>
                     </label>
@@ -1955,7 +2007,7 @@ function SearchPageClient() {
             document.body
           )}
 
-        {/* 搜索结果或搜索历�?*/}
+        {/* 搜索结果或搜索历史 */}
         <div
           className={`max-w-[95%] mx-auto overflow-visible ${
             activeTab === 'video' && !showResults
@@ -1997,7 +2049,7 @@ function SearchPageClient() {
                           </span>
                           {!isFromCache && totalSources > 0 && useFluidSearch && (
                             <span className='inline-flex items-center gap-1'>
-                              �?{completedSources}/{totalSources}
+                              源 {completedSources}/{totalSources}
                               {isLoading && (
                                 <span className='inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-green-500'></span>
                               )}
@@ -2083,7 +2135,7 @@ function SearchPageClient() {
                                   setViewMode(viewMode === 'agg' ? 'all' : 'agg')
                                 }
                               />
-                              <div className='h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-pink-500 dark:bg-gray-600'></div>
+                              <div className='h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-green-500 dark:bg-gray-600'></div>
                               <div className='absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4'></div>
                             </div>
                           </label>
@@ -2100,7 +2152,7 @@ function SearchPageClient() {
                                   setPrivateLibraryOnly(e.target.checked)
                                 }
                               />
-                              <div className='h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-pink-500 dark:bg-gray-600'></div>
+                              <div className='h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-green-500 dark:bg-gray-600'></div>
                               <div className='absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4'></div>
                             </div>
                           </label>
@@ -2117,7 +2169,7 @@ function SearchPageClient() {
                                     ? 'bg-green-500 text-white'
                                     : 'text-gray-600 hover:bg-white dark:text-gray-300 dark:hover:bg-gray-700'
                                 }`}
-                                aria-label='切换为卡片视�?
+                                aria-label='切换为卡片视图'
                               >
                                 <Grid2x2 className='h-4 w-4' />
                                 <span>卡片</span>
@@ -2130,7 +2182,7 @@ function SearchPageClient() {
                                     ? 'bg-green-500 text-white'
                                     : 'text-gray-600 hover:bg-white dark:text-gray-300 dark:hover:bg-gray-700'
                                 }`}
-                                aria-label='切换为列表视�?
+                                aria-label='切换为列表视图'
                               >
                                 <List className='h-4 w-4' />
                                 <span>列表</span>
@@ -2148,7 +2200,8 @@ function SearchPageClient() {
                       </div>
                     ) : (
                       <div className='text-center text-gray-500 py-8 dark:text-gray-400'>
-                        未找到相关结�?                      </div>
+                        未找到相关结果
+                      </div>
                     )
                   ) : (
                     (() => {
@@ -2358,7 +2411,8 @@ function SearchPageClient() {
                 {searchHistory.length > 0 && (
                   <button
                     onClick={() => {
-                      clearSearchHistory(); // 事件监听会自动更新界�?                    }}
+                      clearSearchHistory(); // 事件监听会自动更新界面
+                    }}
                     className='ml-3 text-sm text-gray-500 hover:text-red-500 transition-colors dark:text-gray-400 dark:hover:text-red-500'
                   >
                     清空
@@ -2372,7 +2426,7 @@ function SearchPageClient() {
                       onClick={() => {
                         setSearchQuery(item);
                         setShowResults(true);
-                        // 立即设置加载状态，避免显示"未找到相关结�?
+                        // 立即设置加载状态，避免显示"未找到相关结果"
                         setIsLoading(true);
 
                         // 根据当前选项卡执行不同的搜索
@@ -2411,7 +2465,8 @@ function SearchPageClient() {
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        deleteSearchHistory(item); // 事件监听会自动更新界�?                      }}
+                        deleteSearchHistory(item); // 事件监听会自动更新界面
+                      }}
                       className='absolute -top-1 -right-1 w-4 h-4 opacity-0 group-hover:opacity-100 bg-gray-400 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] transition-colors'
                     >
                       <X className='w-3 h-3' />
