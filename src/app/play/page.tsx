@@ -4,7 +4,7 @@
 
 import { AlertCircle, Cloud, Heart, Keyboard, Loader2, Router, Sparkles, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent, type WheelEvent } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type ChangeEvent, type WheelEvent } from 'react';
 
 import { isAnimeCategoryText } from '@/lib/anime-keyword-expr';
 import { createAnime4KRenderer } from '@/lib/anime4k';
@@ -8753,7 +8753,7 @@ function PlayPageClient() {
               };
 
               // 鼠标移动事件
-              canvas.addEventListener('mousemove', (e: MouseEvent) => {
+              canvas.addEventListener('mousemove', (e: globalThis.MouseEvent) => {
                 if (!artPlayerRef.current) return;
 
                 const rect = canvas.getBoundingClientRect();
@@ -8797,7 +8797,7 @@ function PlayPageClient() {
               });
 
               // 点击跳转
-              canvas.addEventListener('click', (e: MouseEvent) => {
+              canvas.addEventListener('click', (e: globalThis.MouseEvent) => {
                 if (!artPlayerRef.current) return;
 
                 const rect = canvas.getBoundingClientRect();
