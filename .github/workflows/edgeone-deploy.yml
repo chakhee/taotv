@@ -9,7 +9,7 @@ on:
         default: 'moontvplus'
         type: string
       area:
-        description: '部署区域：overseas = 全球可用区（不含中国大陆），global = 全球可用区'
+        description: '部署区域：overseas = 全球可用区（不含中国大陆），global = 全球可用区（含中国大陆）'
         required: false
         default: 'overseas'
         type: choice
@@ -37,13 +37,13 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'pnpm'

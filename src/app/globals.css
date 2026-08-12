@@ -209,6 +209,11 @@ div[data-media-provider] video {
   fill: #ec4899 !important;
 }
 
+/* ArtPlayer 开关开启图标改为粉色 */
+.art-video-player .art-icon-switchOn svg path {
+  fill: #ec4899 !important;
+}
+
 /* 隐藏移动端竖屏时的 pip 按钮 */
 @media (max-width: 768px) {
   .art-control-pip {
