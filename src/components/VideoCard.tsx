@@ -1132,8 +1132,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             ) : (
               config.showPlayButton && (
                 <div
-                  data-button='true'
-                  className='absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-300 ease-in-out delay-75 group-hover:opacity-100 group-hover:scale-100'
+                  className='pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-300 ease-in-out delay-75 group-hover:opacity-100 group-hover:scale-100'
                   style={
                     {
                       WebkitUserSelect: 'none',
