@@ -3799,8 +3799,8 @@ function PlayPageClient() {
     if (artPlayerRef.current) {
       if (failCount === 0) {
         artPlayerRef.current.notice.show = offlineMode
-          ? `已创建 ${successCount} 个离线下载任务！`
-          : `已添加 ${successCount} 个下载任务！`;
+          ? `已创建 ${successCount} 个离线下载任务，可在下载任务中查看进度`
+          : `已添加 ${successCount} 个下载任务；直接下载的文件会保存到浏览器默认下载目录`;
       } else if (successCount === 0) {
         artPlayerRef.current.notice.show = '下载失败，请重试';
       } else {
@@ -7482,7 +7482,7 @@ function PlayPageClient() {
                     <input id="quick-forward-input" type="number" min="1" step="1" value="${quickForwardSecondsRef.current}" style="box-sizing: border-box; width: 100%; height: 40px; padding: 0 10px; border: 1px solid #4b5563; border-radius: 6px; background: #111827; color: #fff; font-size: 14px; outline: none;" />
                     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
                       <button type="button" data-action="cancel" style="height: 36px; padding: 0 14px; border: 0; border-radius: 6px; background: #374151; color: #fff; cursor: pointer;">取消</button>
-                      <button type="button" data-action="confirm" style="height: 36px; padding: 0 14px; border: 0; border-radius: 6px; background: #0d9488; color: #fff; cursor: pointer;">保存</button>
+                      <button type="button" data-action="confirm" style="height: 36px; padding: 0 14px; border: 0; border-radius: 6px; background: #ec4899; color: #fff; cursor: pointer;">保存</button>
                     </div>
                   </div>
                 `;
@@ -7578,7 +7578,7 @@ function PlayPageClient() {
                     <div style="display: flex; gap: 8px;">
                       <input id="intro-input" type="number" min="0" step="1" value="${currentIntro}" placeholder="如: 90"
                              style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: white; font-size: 14px;" />
-                      <button id="set-intro-btn" style="padding: 8px 12px; border-radius: 4px; border: none; background: #007bff; color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">
+                      <button id="set-intro-btn" style="padding: 8px 12px; border-radius: 4px; border: none; background: #ec4899; color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 4px;">
                           <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
                           <path d="M12 6v6l4 4" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -7595,7 +7595,7 @@ function PlayPageClient() {
                     <div style="display: flex; gap: 8px;">
                       <input id="outro-input" type="number" min="0" step="1" value="${currentOutro}" placeholder="如: 120"
                              style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: white; font-size: 14px;" />
-                      <button id="set-outro-btn" style="padding: 8px 12px; border-radius: 4px; border: none; background: #007bff; color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">
+                      <button id="set-outro-btn" style="padding: 8px 12px; border-radius: 4px; border: none; background: #ec4899; color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 4px;">
                           <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
                           <path d="M12 6v6l4 4" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -7604,8 +7604,8 @@ function PlayPageClient() {
                       </button>
                     </div>
                   </div>
-                  <div style="background: rgba(0, 123, 255, 0.1); border-left: 3px solid #007bff; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
-                    <div style="color: #88c0ff; font-size: 12px; line-height: 1.6;">
+                  <div style="background: rgba(236, 72, 153, 0.1); border-left: 3px solid #ec4899; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+                    <div style="color: #f9a8d4; font-size: 12px; line-height: 1.6;">
                       <div style="margin-bottom: 4px;">💡 <strong>提示：</strong></div>
                       <div>• 点击"当前时间"可快速设置为播放位置</div>
                       <div>• 片头90秒表示跳过前1分30秒</div>
@@ -7615,7 +7615,7 @@ function PlayPageClient() {
                   <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #444; padding-top: 15px;">
                     <button id="cancel-btn" style="padding: 8px 16px; border-radius: 4px; border: none; background: #444; color: white; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#444'">取消</button>
                     <button id="clear-btn" style="padding: 8px 16px; border-radius: 4px; border: none; background: #d9534f; color: white; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#c9302c'" onmouseout="this.style.background='#d9534f'">清除</button>
-                    <button id="confirm-btn" style="padding: 8px 16px; border-radius: 4px; border: none; background: #5cb85c; color: white; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#4cae4c'" onmouseout="this.style.background='#5cb85c'">确定</button>
+                    <button id="confirm-btn" style="padding: 8px 16px; border-radius: 4px; border: none; background: #ec4899; color: white; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#db2777'" onmouseout="this.style.background='#ec4899'">确定</button>
                   </div>
                 `;
 
@@ -10097,8 +10097,8 @@ function PlayPageClient() {
                             e.preventDefault();
                             setShowDownloadSelector(true);
                           }}
-                          className='group relative flex items-center justify-center gap-1 w-8 h-8 lg:w-auto lg:h-auto lg:px-2 lg:py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-xs font-medium rounded-md transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer overflow-hidden border border-green-400 flex-shrink-0'
-                          title='下载视频'
+                          className='group relative flex items-center justify-center gap-1 w-8 h-8 lg:w-auto lg:h-auto lg:px-2 lg:py-1.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-xs font-medium rounded-md transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer overflow-hidden border border-pink-400 flex-shrink-0'
+                          title='下载视频，文件保存到浏览器默认下载目录；任务进度可在右下角查看'
                         >
                           <svg
                             className='w-4 h-4 flex-shrink-0 text-white'

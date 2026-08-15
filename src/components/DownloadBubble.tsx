@@ -126,7 +126,8 @@ export function DownloadBubble() {
           cursor: isDragging ? 'grabbing' : 'grab',
           touchAction: 'none',
         }}
-        className='relative group bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110'
+        className='relative group flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white rounded-full px-4 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105'
+        aria-label={downloadingCount > 0 ? `${downloadingCount} 个下载任务进行中` : '查看下载任务'}
       >
         {/* 下载图标 */}
         <svg
@@ -142,6 +143,10 @@ export function DownloadBubble() {
             d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'
           />
         </svg>
+
+        <span className='max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-200 group-hover:max-w-[88px]'>
+          {downloadingCount > 0 ? `${downloadingCount} 个下载中` : '下载任务'}
+        </span>
 
         {/* 下载中数量徽章 */}
         {downloadingCount > 0 && (
