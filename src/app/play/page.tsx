@@ -6983,7 +6983,7 @@ function PlayPageClient() {
           playsInline: true,
           autoPlayback: false,
           airplay: true,
-          theme: '#ec4899',
+          theme: '#f472b6',
           lang: 'zh-cn',
           hotkey: false,
           fastForward: true,
@@ -10491,7 +10491,10 @@ function PlayPageClient() {
                 onChange={playSync.shouldDisableControls ? () => { /* disabled */ } : handleEpisodeChange}
                 onSourceChange={playSync.shouldDisableControls ? () => { /* disabled */ } : handleSourceChange}
                 isRoomMember={playSync.shouldDisableControls}
-                isMovie={detail?.type_name === '电影'}
+                isMovie={
+                  searchType === 'movie' ||
+                  /电影|movie|片$/i.test(detail?.type_name || '')
+                }
                 currentSource={currentSource}
                 currentId={currentId}
                 episodeProgressContentKey={episodeProgressContentKey || undefined}
