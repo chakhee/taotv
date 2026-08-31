@@ -3519,7 +3519,7 @@ export const UserMenu: React.FC = () => {
                         }
                         className='flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700'
                         style={{
-                          background: `linear-gradient(to right, #10b981 0%, #10b981 ${
+                          background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${
                             ((maxConcurrentDownloads - 1) / (10 - 1)) * 100
                           }%, #e5e7eb ${
                             ((maxConcurrentDownloads - 1) / (10 - 1)) * 100
@@ -4067,7 +4067,7 @@ export const UserMenu: React.FC = () => {
                         onClick={() => handleDanmakuMaxCountChange(0)}
                         className={`absolute px-2 py-0.5 rounded ${
                           danmakuMaxCount === 0
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-pink-500 text-white'
                             : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         style={{ left: '0%', transform: 'translateX(0%)' }}
@@ -4078,7 +4078,7 @@ export const UserMenu: React.FC = () => {
                         onClick={() => handleDanmakuMaxCountChange(3000)}
                         className={`absolute px-2 py-0.5 rounded ${
                           danmakuMaxCount === 3000
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-pink-500 text-white'
                             : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         style={{ left: '30%', transform: 'translateX(-50%)' }}
@@ -4089,7 +4089,7 @@ export const UserMenu: React.FC = () => {
                         onClick={() => handleDanmakuMaxCountChange(5000)}
                         className={`absolute px-2 py-0.5 rounded ${
                           danmakuMaxCount === 5000
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-pink-500 text-white'
                             : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         style={{ left: '50%', transform: 'translateX(-50%)' }}
@@ -4100,7 +4100,7 @@ export const UserMenu: React.FC = () => {
                         onClick={() => handleDanmakuMaxCountChange(10000)}
                         className={`absolute px-2 py-0.5 rounded ${
                           danmakuMaxCount === 10000
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-pink-500 text-white'
                             : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         style={{ left: '100%', transform: 'translateX(-100%)' }}

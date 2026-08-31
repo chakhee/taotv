@@ -164,8 +164,48 @@ async function requestWithFallback<T>(path: string): Promise<T> {
   }
 }
 
+const BANGUMI_CALENDAR_CACHE_KEY = 'homepage_bangumi';
+const BANGUMI_CALENDAR_CACHE_TTL = 60 * 60 * 1000;
+
+function readBangumiCalendarCache(): BangumiCalendarData[] | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = localStorage.getItem(BANGUMI_CALENDAR_CACHE_KEY);
+    if (!raw) return null;
+
+    const { data, timestamp } = JSON.parse(raw);
+    if (!Array.isArray(data) || data.length === 0) return null;
+    if (Date.now() - timestamp > BANGUMI_CALENDAR_CACHE_TTL) return null;
+
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function writeBangumiCalendarCache(data: BangumiCalendarData[]): void {
+  if (typeof window === 'undefined' || !Array.isArray(data) || data.length === 0) {
+    return;
+  }
+
+  try {
+    localStorage.setItem(
+      BANGUMI_CALENDAR_CACHE_KEY,
+      JSON.stringify({ data, timestamp: Date.now() })
+    );
+  } catch {
+    // localStorage 不可用时忽略
+  }
+}
+
 export async function GetBangumiCalendarData(): Promise<BangumiCalendarData[]> {
-  return requestWithFallback<BangumiCalendarData[]>('/calendar');
+  const cached = readBangumiCalendarCache();
+  if (cached) return cached;
+
+  const data = await requestWithFallback<BangumiCalendarData[]>('/calendar');
+  writeBangumiCalendarCache(data);
+  return data;
 }
 
 export async function getBangumiSubject(

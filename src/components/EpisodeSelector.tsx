@@ -62,6 +62,8 @@ interface EpisodeSelectorProps {
   onUploadDanmaku?: (comments: DanmakuComment[]) => void;
   /** 观影室房员状态 - 禁用选集和换源，但保留弹幕 */
   isRoomMember?: boolean;
+  /** 电影播放时默认展示换源选项卡 */
+  isMovie?: boolean;
   /** 外层使用 TMDB 背景图时，提升深色文字对比度 */
   useLightTextOnBackdrop?: boolean;
   /** 集数过滤配置 */
@@ -93,6 +95,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   currentDanmakuSelection,
   onUploadDanmaku,
   isRoomMember = false,
+  isMovie = false,
   useLightTextOnBackdrop = false,
   episodeFilterConfig = null,
   onFilterConfigUpdate,
@@ -265,17 +268,20 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   }, [currentSource, currentId, episodeProgressContentKey, totalEpisodes, value]);
 
   // 主要的 tab 状态：'danmaku' | 'episodes' | 'sources'
-  // 默认显示选集选项卡，但如果是房员则显示弹幕
+  // 电影默认显示换源，剧集默认显示选集；房员始终显示弹幕
   const [activeTab, setActiveTab] = useState<'danmaku' | 'episodes' | 'sources'>(
-    isRoomMember ? 'danmaku' : 'episodes'
+    isRoomMember ? 'danmaku' : isMovie ? 'sources' : 'episodes'
   );
 
-  // 当房员状态变化时，自动切换到弹幕选项卡
+  // 详情异步加载后，电影也应默认显示换源选项卡。
   useEffect(() => {
     if (isRoomMember && (activeTab === 'episodes' || activeTab === 'sources')) {
       setActiveTab('danmaku');
     }
-  }, [isRoomMember, activeTab]);
+    if (!isRoomMember && isMovie) {
+      setActiveTab('sources');
+    }
+  }, [isRoomMember, isMovie, activeTab]);
 
   // 当前分组索引（0 开始）
   const initialPage = Math.max(

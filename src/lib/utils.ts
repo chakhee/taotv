@@ -153,6 +153,10 @@ type AnimeImageSource = 'direct' | 'server-proxy' | 'custom-baseurl';
 const BANGUMI_IMAGE_FALLBACK_UNTIL_KEY = 'bangumiImageFallbackUntil';
 const BANGUMI_IMAGE_FALLBACK_SIGNATURE_KEY = 'bangumiImageFallbackSignature';
 const BANGUMI_IMAGE_FALLBACK_DURATION = 60 * 60 * 1000;
+const BANGUMI_IMAGE_PROBE_OK_TTL_MS = 15 * 60 * 1000;
+
+let bangumiImageProbePromise: Promise<boolean> | null = null;
+let bangumiImageProbeSuccessUntil = 0;
 
 function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(/\/+$/, '');
@@ -226,35 +230,57 @@ export async function ensureBangumiImagePrimaryProbed(): Promise<boolean> {
     return true;
   }
 
+  if (Date.now() < bangumiImageProbeSuccessUntil) {
+    return true;
+  }
+
+  if (bangumiImageProbePromise) {
+    return bangumiImageProbePromise;
+  }
+
   const probeUrl =
     primary === 'custom-baseurl'
       ? `${normalizeBaseUrl(getBangumiImageBaseUrl())}/v0/calendar`
       : 'https://api.bgm.tv/v0/calendar';
 
-  try {
-    const response = await fetch(probeUrl, {
-      method: 'GET',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    });
+  bangumiImageProbePromise = (async () => {
+    try {
+      const response = await fetch(probeUrl, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: AbortSignal.timeout(5000),
+      });
 
-    if (response.ok) {
-      clearBangumiImageFallbackCache();
-      return true;
+      if (response.ok) {
+        bangumiImageProbeSuccessUntil =
+          Date.now() + BANGUMI_IMAGE_PROBE_OK_TTL_MS;
+        clearBangumiImageFallbackFlags();
+        return true;
+      }
+
+      markBangumiImageFallbackActive();
+      return false;
+    } catch {
+      markBangumiImageFallbackActive();
+      return false;
+    } finally {
+      bangumiImageProbePromise = null;
     }
+  })();
 
-    markBangumiImageFallbackActive();
-    return false;
-  } catch {
-    markBangumiImageFallbackActive();
-    return false;
-  }
+  return bangumiImageProbePromise;
 }
 
-export function clearBangumiImageFallbackCache(): void {
+function clearBangumiImageFallbackFlags(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(BANGUMI_IMAGE_FALLBACK_UNTIL_KEY);
   localStorage.removeItem(BANGUMI_IMAGE_FALLBACK_SIGNATURE_KEY);
+}
+
+export function clearBangumiImageFallbackCache(): void {
+  clearBangumiImageFallbackFlags();
+  bangumiImageProbeSuccessUntil = 0;
+  bangumiImageProbePromise = null;
 }
 
 export function markBangumiImageFallbackActive(): void {

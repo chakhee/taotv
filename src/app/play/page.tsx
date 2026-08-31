@@ -10491,6 +10491,7 @@ function PlayPageClient() {
                 onChange={playSync.shouldDisableControls ? () => { /* disabled */ } : handleEpisodeChange}
                 onSourceChange={playSync.shouldDisableControls ? () => { /* disabled */ } : handleSourceChange}
                 isRoomMember={playSync.shouldDisableControls}
+                isMovie={detail?.type_name === '电影'}
                 currentSource={currentSource}
                 currentId={currentId}
                 episodeProgressContentKey={episodeProgressContentKey || undefined}
@@ -10520,7 +10521,15 @@ function PlayPageClient() {
             <div className='grid grid-cols-1 md:grid-cols-5 lg:grid-cols-6 gap-4'>
               {/* 文字区 */}
               <div className='md:col-span-4 lg:col-span-5'>
-                <div className='bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-6 flex flex-col min-h-0'>
+                <div className='relative overflow-hidden rounded-xl border border-gray-200/50 bg-white/50 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/50'>
+                  {videoCover && (
+                    <div
+                      aria-hidden='true'
+                      className='absolute inset-0 scale-110 bg-cover bg-center opacity-20 blur-2xl'
+                      style={{ backgroundImage: `url(${videoCover})` }}
+                    />
+                  )}
+                  <div className='relative z-10 flex min-h-0 flex-col p-6'>
                   {/* 标题 */}
                   <h1 className={`text-3xl font-bold mb-2 tracking-wide flex items-center flex-shrink-0 text-center md:text-left w-full flex-wrap gap-2 ${tmdbBackdrop ? 'text-white' : 'text-gray-900 dark:text-gray-100'}`}>
                     <span className={doubanAka.length > 0 ? 'relative group cursor-help' : ''}>
@@ -10714,6 +10723,7 @@ function PlayPageClient() {
                       {netdiskTMDBMeta?.desc || correctedDesc || detail?.desc}
                     </div>
                   )}
+                  </div>
                 </div>
               </div>
 

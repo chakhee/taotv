@@ -8,14 +8,14 @@
 }
 
 #nprogress .bar {
-  background: #3b82f6;
+  background: #ec4899;
   position: fixed;
   z-index: 9999;
   top: 0;
   left: 0;
   width: 100%;
   height: 3px;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 5px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.8), 0 0 5px rgba(236, 72, 153, 0.6);
 }
 
 #nprogress .peg {
@@ -24,19 +24,19 @@
   right: 0px;
   width: 100px;
   height: 100%;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 5px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.8), 0 0 5px rgba(236, 72, 153, 0.6);
   opacity: 1.0;
   transform: rotate(3deg) translate(0px, -4px);
 }
 
 /* 暗色模式下的进度条样式 */
 .dark #nprogress .bar {
-  background: #60a5fa;
-  box-shadow: 0 0 10px rgba(96, 165, 250, 0.8), 0 0 5px rgba(96, 165, 250, 0.6);
+  background: #f472b6;
+  box-shadow: 0 0 10px rgba(244, 114, 182, 0.8), 0 0 5px rgba(244, 114, 182, 0.6);
 }
 
 .dark #nprogress .peg {
-  box-shadow: 0 0 10px rgba(96, 165, 250, 0.8), 0 0 5px rgba(96, 165, 250, 0.6);
+  box-shadow: 0 0 10px rgba(244, 114, 182, 0.8), 0 0 5px rgba(244, 114, 182, 0.6);
 }
 
 @layer utilities {
@@ -202,6 +202,25 @@ div[data-media-provider] video {
   background-color: #ec4899 !important;
   border-color: #ec4899 !important;
   box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+}
+
+/* 播放器的音量、弹幕设置和显示设置统一使用主题粉色。 */
+.art-video-player .art-volume-panel input[type='range'],
+.art-video-player .apd-config-panel input[type='range'],
+.art-video-player .apd-config-panel input[type='checkbox'] {
+  accent-color: #ec4899;
+}
+
+.art-video-player .art-volume-panel .art-volume-inner,
+.art-video-player .art-volume-panel .art-volume-progress,
+.art-video-player .apd-config-panel input[type='range']::-webkit-slider-thumb {
+  background-color: #ec4899 !important;
+}
+
+.art-video-player .art-setting-item.art-current,
+.art-video-player .art-setting-item.art-current .art-setting-item-left,
+.art-video-player .apd-config-panel .apd-config-item-active {
+  color: #ec4899 !important;
 }
 
 /* 弹幕插件开启勾图标改为粉色 */

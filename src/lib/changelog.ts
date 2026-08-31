@@ -11,6 +11,19 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "225.0.1",
+    date: "2026-08-21",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "每日放送复用新番放送缓存"
+    ],
+    fixed: [
+    "修复动漫图片源探测重复多次请求"
+    ]
+  },
+  {
     version: "224.2.0",
     date: "2026-08-03",
     added: [
