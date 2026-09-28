@@ -1,4 +1,4 @@
-name = "moontv-plus"
+name = "taotv"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 main = ".open-next/worker.js"
@@ -13,8 +13,8 @@ binding = "ASSETS"
 # D1 数据库绑定
 [[d1_databases]]
 binding = "DB"
-database_name = "moontvplus"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_name = "moontv"
+database_id = "aeaa3b8d-adef-47e7-8c53-6fc22033cca9"
 
 [vars]
 NODE_ENV = "production"
