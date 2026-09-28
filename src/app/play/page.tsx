@@ -10471,46 +10471,6 @@ function PlayPageClient() {
               </div>
             </div>
 
-            {hasCompletedSearchRequest && fallbackRecommendations.length > 0 && (
-              <div className='mt-4 w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-gray-200 bg-white/70 p-3 text-left dark:border-gray-700 dark:bg-gray-800/70 sm:max-w-3xl lg:max-w-5xl'>
-                <div className='mb-3 flex items-center gap-2'>
-                  <Sparkles className='h-4 w-4 flex-shrink-0 text-amber-500' />
-                  <h3 className='text-sm font-semibold text-gray-800 dark:text-gray-200'>
-                    也许你想看
-                  </h3>
-                </div>
-                <div
-                  ref={fallbackRecommendationsRowRef}
-                  className='w-full overflow-x-auto overflow-y-hidden pb-1 cursor-grab active:cursor-grabbing'
-                  onWheel={handleFallbackRecommendationsWheel}
-                  onMouseDown={handleFallbackRecommendationsMouseDown}
-                  onMouseMove={handleFallbackRecommendationsMouseMove}
-                  onMouseUp={stopFallbackRecommendationsDragging}
-                  onMouseLeave={stopFallbackRecommendationsDragging}
-                >
-                  <div className='inline-flex gap-2.5 sm:gap-3'>
-                    {fallbackRecommendations.map((recommendation) => (
-                      <div
-                        key={recommendation.key}
-                        className='w-[118px] min-w-[118px] flex-shrink-0 sm:w-[150px] sm:min-w-[150px]'
-                      >
-                        <VideoCard
-                          title={recommendation.item.title}
-                          query={searchTitle || videoTitle}
-                          poster={recommendation.item.poster}
-                          episodes={recommendation.episodes}
-                          source_names={recommendation.sourceNames}
-                          year={recommendation.item.year}
-                          douban_id={recommendation.doubanId}
-                          from='search'
-                          isAggregate
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </PageLayout>
