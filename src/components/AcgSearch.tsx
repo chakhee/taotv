@@ -57,6 +57,10 @@ function getStoredAcgSource(): AcgSearchSource {
     : 'acgrip';
 }
 
+function getAcgItemId(item: AcgSearchItem, index: number): string {
+  return item.guid || item.torrentUrl || item.link || `${item.title}-${index}`;
+}
+
 export default function AcgSearch({
   keyword,
   triggerSearch,
