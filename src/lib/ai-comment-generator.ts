@@ -1,5 +1,7 @@
 // AI评论生成核心逻辑
 
+import { parseStringPromise } from 'xml2js';
+
 export interface AIComment {
   id: string;
   userName: string;

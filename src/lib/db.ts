@@ -1,7 +1,6 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 import { AdminConfig } from './admin.types';
-import { MusicPlayRecord } from './db.client';
 import { MangaReadRecord, MangaShelfItem } from './manga.types';
 import { BookReadRecord, BookShelfItem } from './book.types';
 import {
@@ -14,6 +13,7 @@ import {
   Favorite,
   IStorage,
   LocalSettingsSyncRecord,
+  MusicPlayRecord,
   PlayRecord,
   SetLocalSettingsSyncOptions,
   SetLocalSettingsSyncResult,

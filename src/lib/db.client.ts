@@ -17,7 +17,15 @@
 import { getAuthInfoFromBrowserCookie, clearAuthCookie } from './auth';
 import { normalizeEpisodeFilterConfig } from './episode-filter';
 import { MangaReadRecord, MangaShelfItem } from './manga.types';
-import { DanmakuFilterConfig, EpisodeFilterConfig, SkipConfig } from './types';
+import type {
+  DanmakuFilterConfig,
+  EpisodeFilterConfig,
+  Favorite,
+  MusicPlayRecord,
+  PlayRecord,
+  SkipConfig,
+} from './types';
+export type { Favorite, MusicPlayRecord, PlayRecord } from './types';
 
 // 全局错误触发函数
 function triggerGlobalError(message: string) {
@@ -28,50 +36,6 @@ function triggerGlobalError(message: string) {
       })
     );
   }
-}
-
-// ---- 类型 ----
-export interface PlayRecord {
-  title: string;
-  source_name: string;
-  year: string;
-  cover: string;
-  index: number; // 第几集
-  total_episodes: number; // 总集数
-  play_time: number; // 播放进度（秒）
-  total_time: number; // 总进度（秒）
-  save_time: number; // 记录保存时间（时间戳）
-  search_title?: string; // 搜索时使用的标题
-  origin?: 'vod' | 'live'; // 来源类型
-  new_episodes?: number; // 新增的剧集数量（用于显示更新提示）
-  is_anime?: boolean; // 是否判定为动漫
-}
-
-// ---- 收藏类型 ----
-export interface Favorite {
-  title: string;
-  source_name: string;
-  year: string;
-  cover: string;
-  total_episodes: number;
-  save_time: number;
-  search_title?: string;
-  origin?: 'vod' | 'live';
-  is_completed?: boolean; // 是否已完结
-  vod_remarks?: string; // 视频备注信息
-}
-
-// ---- 音乐播放记录类型 ----
-export interface MusicPlayRecord {
-  platform: 'netease' | 'qq' | 'kuwo'; // 音乐平台
-  id: string; // 歌曲ID
-  name: string; // 歌曲名
-  artist: string; // 艺术家
-  album?: string; // 专辑
-  pic?: string; // 封面图
-  play_time: number; // 播放进度（秒）
-  duration: number; // 总时长（秒）
-  save_time: number; // 记录保存时间（时间戳）
 }
 
 // ---- 缓存数据结构 ----

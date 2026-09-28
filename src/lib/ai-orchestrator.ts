@@ -6,6 +6,7 @@
 
 import { fetchDoubanData as fetchDoubanAPI } from '@/lib/douban';
 import { getNextApiKey } from '@/lib/tmdb.client';
+import { parseStringPromise } from 'xml2js';
 
 export interface VideoContext {
   title?: string;
