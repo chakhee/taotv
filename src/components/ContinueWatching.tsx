@@ -35,7 +35,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
     allRecords: Record<string, PlayRecord>,
     limit?: number
   ) => {
-    const recordsArray = Object.entries(allRecords).map(([key, record]) => ({
+    const recordsArray = Object.entries(allRecords).map(([key, record]: [string, PlayRecord]) => ({
       ...record,
       key,
     }));

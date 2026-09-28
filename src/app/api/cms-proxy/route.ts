@@ -325,11 +325,11 @@ async function handleOpenListProxy(request: NextRequest) {
   if (wd) {
     const results = Object.entries(metaInfo.folders)
       .filter(
-        ([_key, info]) =>
+        ([_key, info]: [string, MetaInfo['folders'][string]]) =>
           info.folderName.toLowerCase().includes(wd.toLowerCase()) ||
           info.title.toLowerCase().includes(wd.toLowerCase())
       )
-      .map(([key, info]) => ({
+      .map(([key, info]: [string, MetaInfo['folders'][string]]) => ({
         vod_id: key,
         vod_name: info.title,
         vod_pic: getTMDBImageUrl(info.poster_path),

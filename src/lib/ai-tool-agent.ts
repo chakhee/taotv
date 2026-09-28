@@ -494,7 +494,7 @@ async function dispatchTool(
           return { name, ok: false, text: 'TMDB 热榜获取失败。' };
         }
         const text = JSON.stringify(
-          res.list.map((item) => ({
+          res.list.map((item: any) => ({
             id: item.id,
             title: item.title,
             media_type: item.media_type,
@@ -515,10 +515,10 @@ async function dispatchTool(
         }
         const typeFilter = args?.type;
         const items = res.results.filter(
-          (r) => !typeFilter || r.media_type === typeFilter
+          (r: any) => !typeFilter || r.media_type === typeFilter
         );
         const text = JSON.stringify(
-          items.slice(0, 8).map((r) => ({
+          items.slice(0, 8).map((r: any) => ({
             id: r.id,
             title: r.title || r.name,
             media_type: r.media_type,
@@ -557,9 +557,9 @@ async function dispatchTool(
       if (!username) return { name, ok: false, text: '用户未登录，无法获取收藏。' };
       const favorites = await db.getAllFavorites(username);
       const items = Object.values(favorites)
-        .sort((a, b) => (b.save_time ?? 0) - (a.save_time ?? 0))
+        .sort((a: any, b: any) => (b.save_time ?? 0) - (a.save_time ?? 0))
         .slice(0, 20)
-        .map((f) => ({
+        .map((f: any) => ({
           title: f.title,
           year: f.year,
           source: f.source_name,
@@ -579,9 +579,9 @@ async function dispatchTool(
       if (!username) return { name, ok: false, text: '用户未登录，无法获取最近观看。' };
       const records = await db.getAllPlayRecords(username);
       const items = Object.values(records)
-        .sort((a, b) => (b.save_time ?? 0) - (a.save_time ?? 0))
+        .sort((a: any, b: any) => (b.save_time ?? 0) - (a.save_time ?? 0))
         .slice(0, 20)
-        .map((r) => ({
+        .map((r: any) => ({
           title: r.title,
           year: r.year,
           source: r.source_name,
@@ -1430,23 +1430,23 @@ function toolElementToText(el: any, protocol: NewProtocol): string {
   if (protocol === 'claude') {
     const content: any[] = Array.isArray(el.content) ? el.content : [];
     if (el.role === 'assistant') {
-      const tools = content.filter((b) => b?.type === 'tool_use');
+      const tools = content.filter((b: any) => b?.type === 'tool_use');
       const text = content
-        .filter((b) => b?.type === 'text')
-        .map((b) => b.text)
+        .filter((b: any) => b?.type === 'text')
+        .map((b: any) => b.text)
         .join('');
       if (tools.length) {
         lines.push(
           `助手调用工具: ${tools
-            .map((b) => `${b.name}(${JSON.stringify(b.input ?? {})})`)
+            .map((b: any) => `${b.name}(${JSON.stringify(b.input ?? {})})`)
             .join('; ')}`
         );
       }
       if (text) lines.push(`助手: ${text}`);
     } else if (el.role === 'user') {
       const results = content
-        .filter((b) => b?.type === 'tool_result')
-        .map((b) => (typeof b.content === 'string' ? b.content : JSON.stringify(b.content ?? '')))
+        .filter((b: any) => b?.type === 'tool_result')
+        .map((b: any) => (typeof b.content === 'string' ? b.content : JSON.stringify(b.content ?? '')))
         .join('\n');
       if (results) lines.push(`工具结果: ${results.slice(0, 4000)}`);
     }

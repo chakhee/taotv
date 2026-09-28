@@ -15,6 +15,22 @@ import { AnimeSubscription, AnimeSubscriptionDownloadTool } from '@/types/anime-
 
 const downloadTools: AnimeSubscriptionDownloadTool[] = ['aria2', 'qBittorrent', 'Transmission'];
 
+interface AnimeSearchResult {
+  title: string;
+  link: string;
+  guid: string;
+  pubDate: string;
+  torrentUrl: string;
+  description: string;
+}
+
+interface TestedAnimeSearchResult extends AnimeSearchResult {
+  episode: number | null;
+  matchesInclude: boolean;
+  matchesExclude: boolean;
+  accepted: boolean;
+}
+
 const pickRssText = (value: any): string => {
   if (value === undefined || value === null) return '';
   const first = Array.isArray(value) ? value[0] : value;
@@ -118,7 +134,7 @@ export function matchesFilter(title: string, filterText: string): boolean {
 export async function searchACG(
   keyword: string,
   source: 'acgrip' | 'mikan' | 'dmhy' | 'nyaa'
-) {
+): Promise<AnimeSearchResult[]> {
   const trimmedKeyword = keyword.trim();
   const config = await getConfig();
 
@@ -181,7 +197,7 @@ export async function searchACG(
   const items = parsed.rss.channel[0].item;
 
   // 统一格式。注意：Nyaa RSS 的 link 是 .torrent 下载地址，guid 才是详情页。
-  return items.map((item: any) => {
+  return items.map((item: any): AnimeSearchResult => {
     const title = pickRssText(item.title);
     const rawLink = pickRssText(item.link);
     const rawGuid = pickRssText(item.guid);
@@ -223,7 +239,7 @@ export async function testEpisodeFilter(input: {
   const episodeRegex = (input.episodeRegex || '').trim();
   const lastEpisode = Number(input.lastEpisode || 0);
 
-  const tested = results.map((item: any) => {
+  const tested: TestedAnimeSearchResult[] = results.map((item): TestedAnimeSearchResult => {
     const matchesInclude = matchesFilter(item.title, input.filterText);
     const matchesExclude =
       excludeTokens.length > 0 &&
