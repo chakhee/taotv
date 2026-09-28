@@ -2,6 +2,7 @@
 
 import {
   BookOpen,
+  ChevronLeft,
   Headphones,
   History,
   Library,
@@ -9,7 +10,9 @@ import {
   MoreVertical,
   Search,
   Settings2,
+  Sparkles,
 } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -23,6 +26,7 @@ import {
 } from '@/components/media/library';
 import MediaShell, { MediaShellTab } from '@/components/media/MediaShell';
 import { useSite } from '@/components/SiteProvider';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const tabs: MediaShellTab[] = [
   { href: '/books', label: '发现', icon: Library },
