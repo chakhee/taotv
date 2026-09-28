@@ -1,79 +1,160 @@
 'use client';
 
-import { FlaskConical, Loader2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { FlaskConical, Loader2, Sparkles, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-type AnimeSource = 'acgrip' | 'mikan' | 'dmhy' | 'nyaa';
+import {
+  type FansubRecognition,
+  type FansubRecognizeResult,
+  type FansubVariant,
+  buildFilterTextFromRecognition,
+} from '@/lib/anime-fansub-recognize';
+import {
+  type AnimeExcludePreset,
+  type AnimeFansubPreset,
+  ANIME_EXCLUDE_PRESETS,
+  ANIME_FANSUB_PRESETS,
+  applyExcludeSingleSelect,
+  applyFansubSingleSelect,
+  isExcludePresetActive,
+  isFansubPresetActive,
+} from '@/lib/anime-filter-presets';
 
-interface AnimeSubscribeModalProps {
+import { type EpisodeTestResult } from '@/types/anime-subscription';
+
+export interface AnimeSubscribeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTitle?: string;
+  /** 预填番剧名（搜索词） */
+  initialTitle: string;
+  /** 继续观看时可预填已看集数 */
   initialLastEpisode?: number;
   onSuccess?: () => void;
 }
 
-interface EpisodeTestItem {
-  title: string;
-  episode: number | null;
-}
+type SourceType = 'acgrip' | 'mikan' | 'dmhy' | 'nyaa';
 
-interface EpisodeTestResult {
-  total: number;
-  matched: number;
-  episodes: number[];
-  newEpisodes: number[];
-  unparsed: number;
-  lastEpisode: number;
-  items: EpisodeTestItem[];
-}
-
+/**
+ * VideoCard / 管理入口共用的「添加追番订阅」轻量弹层（仅 admin API）
+ */
 export default function AnimeSubscribeModal({
   isOpen,
   onClose,
-  initialTitle = '',
+  initialTitle,
   initialLastEpisode = 0,
   onSuccess,
 }: AnimeSubscribeModalProps) {
-  const [mounted, setMounted] = useState(false);
-  const [title, setTitle] = useState('');
-  const [filterText, setFilterText] = useState('');
-  const [excludeText, setExcludeText] = useState('');
-  const [episodeRegex, setEpisodeRegex] = useState('');
-  const [lastEpisode, setLastEpisode] = useState(0);
-  const [source, setSource] = useState<AnimeSource>('mikan');
-  const [enabled, setEnabled] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [recognizing, setRecognizing] = useState(false);
+  const [recognizeError, setRecognizeError] = useState('');
+  const [recognition, setRecognition] = useState<FansubRecognizeResult | null>(null);
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState('');
   const [testResult, setTestResult] = useState<EpisodeTestResult | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({
+    title: '',
+    filterText: '',
+    excludeText: '',
+    source: 'mikan' as SourceType,
+    lastEpisode: 0,
+    enabled: true,
+    onePerEpisode: false,
+    refillMissingEpisodes: false,
+    episodeRegex: '',
+  });
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const seedTitle = initialTitle || '';
-    setTitle(seedTitle);
-    setFilterText(seedTitle);
-    setExcludeText('');
-    setEpisodeRegex('');
-    setLastEpisode(Number.isFinite(initialLastEpisode) ? Math.max(0, initialLastEpisode) : 0);
-    setSource('mikan');
-    setEnabled(true);
-    setTesting(false);
-    setTestError('');
-    setTestResult(null);
-    setSubmitting(false);
-    setError('');
+    if (isOpen) {
+      setVisible(true);
+      setError('');
+      setRecognizeError('');
+      setRecognition(null);
+      setTestError('');
+      setTestResult(null);
+      setForm({
+        title: initialTitle || '',
+        filterText: '',
+        excludeText: '',
+        source: 'mikan',
+        lastEpisode:
+          typeof initialLastEpisode === 'number' && initialLastEpisode > 0
+            ? initialLastEpisode
+            : 0,
+        enabled: true,
+        onePerEpisode: false,
+        refillMissingEpisodes: false,
+        episodeRegex: '',
+      });
+    } else {
+      setVisible(false);
+    }
   }, [isOpen, initialTitle, initialLastEpisode]);
 
-  const canSubmit = useMemo(() => {
-    return title.trim().length > 0 && filterText.trim().length > 0 && !submitting;
-  }, [title, filterText, submitting]);
+  if (!isOpen) return null;
+
+  const chipClass = (active: boolean) =>
+    `px-2 py-0.5 text-xs rounded-full border transition-colors ${
+      active
+        ? 'bg-green-600 text-white border-green-600'
+        : 'bg-gray-50 dark:bg-gray-700/60 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
+    }`;
+
+  const handleFansubSelect = (preset: AnimeFansubPreset) => {
+    setForm((prev) => ({
+      ...prev,
+      filterText: applyFansubSingleSelect(prev.filterText, preset),
+    }));
+  };
+
+  const handleExcludeSelect = (preset: AnimeExcludePreset) => {
+    setForm((prev) => ({
+      ...prev,
+      excludeText: applyExcludeSingleSelect(prev.excludeText, preset),
+    }));
+  };
+
+  /** 智能识别：按番剧名在当前源搜一次，对结果做字幕组 × 字幕形态分组 */
+  const handleRecognize = async () => {
+    const keyword = form.title.trim();
+    if (!keyword) {
+      setRecognizeError('请先填写番剧名称');
+      return;
+    }
+    try {
+      setRecognizing(true);
+      setRecognizeError('');
+      const res = await fetch('/api/admin/anime-subscription/recognize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: keyword, source: form.source }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || '智能识别失败');
+      }
+      const data: FansubRecognizeResult = await res.json();
+      setRecognition(data);
+    } catch (e) {
+      setRecognition(null);
+      setRecognizeError(e instanceof Error ? e.message : '智能识别失败');
+    } finally {
+      setRecognizing(false);
+    }
+  };
+
+  /** 点击识别结果：将「字幕组&字幕形态」写入过滤关键词（替换） */
+  const applyRecognition = (fansub: FansubRecognition, variant: FansubVariant) => {
+    setForm((prev) => ({
+      ...prev,
+      filterText: buildFilterTextFromRecognition(
+        fansub.fansubFilter,
+        variant.filter
+      ),
+    }));
+  };
 
   /** 校验自定义集数正则（客户端快速反馈） */
   const checkEpisodeRegex = (regex: string): string | null => {
@@ -90,16 +171,16 @@ export default function AnimeSubscribeModal({
 
   /** 测试：按当前表单实际搜索一次，展示关键词命中与集数提取结果 */
   const handleTest = async () => {
-    const keyword = title.trim();
+    const keyword = form.title.trim();
     if (!keyword) {
       setTestError('请先填写番剧名称');
       return;
     }
-    if (!filterText.trim()) {
+    if (!form.filterText.trim()) {
       setTestError('请先填写过滤关键词');
       return;
     }
-    const regexError = checkEpisodeRegex(episodeRegex);
+    const regexError = checkEpisodeRegex(form.episodeRegex);
     if (regexError) {
       setTestError(`集数正则无效: ${regexError}`);
       return;
@@ -112,11 +193,11 @@ export default function AnimeSubscribeModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: keyword,
-          filterText: filterText.trim(),
-          excludeText: excludeText.trim(),
-          source,
-          episodeRegex: episodeRegex.trim(),
-          lastEpisode,
+          filterText: form.filterText.trim(),
+          excludeText: form.excludeText.trim(),
+          source: form.source,
+          episodeRegex: form.episodeRegex.trim(),
+          lastEpisode: form.lastEpisode,
         }),
       });
       if (!res.ok) {
@@ -134,74 +215,215 @@ export default function AnimeSubscribeModal({
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
-    setSubmitting(true);
-    setError('');
+    if (!form.title.trim() || !form.filterText.trim()) {
+      setError('番剧名称和过滤关键词不能为空');
+      return;
+    }
+    const regexError = checkEpisodeRegex(form.episodeRegex);
+    if (regexError) {
+      setError(`集数正则无效: ${regexError}`);
+      return;
+    }
     try {
-      const response = await fetch('/api/admin/anime-subscription', {
+      setLoading(true);
+      setError('');
+      const res = await fetch('/api/admin/anime-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: title.trim(),
-          filterText: filterText.trim(),
-          source,
-          enabled,
-          lastEpisode: Math.max(0, Number(lastEpisode) || 0),
+          title: form.title.trim(),
+          filterText: form.filterText.trim(),
+          excludeText: form.excludeText.trim(),
+          source: form.source,
+          enabled: form.enabled,
+          lastEpisode: form.lastEpisode,
+          onePerEpisode: form.onePerEpisode,
+          refillMissingEpisodes: form.refillMissingEpisodes,
+          episodeRegex: form.episodeRegex.trim(),
         }),
       });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data?.error || '添加追番订阅失败');
+      if (res.status === 403) {
+        setError('无权限：仅管理员可添加追番订阅');
+        return;
       }
-
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || '创建订阅失败');
+        return;
+      }
       onSuccess?.();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : '添加追番订阅失败');
+      setError(e instanceof Error ? e.message : '创建订阅失败');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  if (!isOpen || !mounted) return null;
-
   return createPortal(
-    <div className='fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 px-4'>
-      <div className='w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900'>
-        <div className='flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700'>
-          <h3 className='text-base font-semibold text-gray-900 dark:text-gray-100'>添加追番订阅</h3>
+    <div className='fixed inset-0 z-[10000] flex items-center justify-center p-4'>
+      <div
+        className={`absolute inset-0 bg-black transition-opacity duration-200 ${
+          visible ? 'opacity-50' : 'opacity-0'
+        }`}
+        onClick={onClose}
+      />
+      <div
+        className={`relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white dark:bg-gray-800 shadow-xl transition-all duration-200 ${
+          visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        }`}
+      >
+        <div className='sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'>
+          <h3 className='text-base font-semibold text-gray-900 dark:text-white'>
+            添加追番订阅
+          </h3>
           <button
             type='button'
             onClick={onClose}
-            className='rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200'
-            aria-label='关闭'
+            className='p-1 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
           >
-            <X className='h-4 w-4' />
+            <X size={18} />
           </button>
         </div>
 
-        <div className='space-y-3 p-4'>
+        <div className='p-4 space-y-3'>
+          <p className='text-xs text-gray-500 dark:text-gray-400'>
+            将按番剧名在 ACG 源搜索，过滤后自动离线下载（仅管理员）。
+          </p>
+
           <div>
-            <label className='mb-1 block text-sm text-gray-700 dark:text-gray-300'>标题</label>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'>
+              番剧名称 *
+            </label>
             <input
-              type='text'
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-pink-500 dark:focus:ring-pink-900/50'
-              placeholder='例如：某某动画'
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className='w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm'
+              placeholder='搜索用的番剧名'
             />
           </div>
 
           <div>
-            <label className='mb-1 block text-sm text-gray-700 dark:text-gray-300'>过滤关键词</label>
+            <div className='flex items-center justify-between mb-1'>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300'>
+                过滤关键词 *
+              </label>
+              <button
+                type='button'
+                onClick={handleRecognize}
+                disabled={recognizing}
+                title='按番剧名搜索一次，识别字幕组与字幕形态'
+                className='flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border border-blue-300 dark:border-blue-500/60 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors disabled:opacity-50'
+              >
+                {recognizing ? (
+                  <Loader2 size={12} className='animate-spin' />
+                ) : (
+                  <Sparkles size={12} />
+                )}
+                智能识别
+              </button>
+            </div>
             <input
-              type='text'
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-pink-500 dark:focus:ring-pink-900/50'
-              placeholder='用于检索资源的关键词'
+              value={form.filterText}
+              onChange={(e) => setForm({ ...form, filterText: e.target.value })}
+              className='w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm'
+              placeholder='喵萌奶茶屋&简日双语'
             />
+            {recognizeError ? (
+              <p className='mt-1 text-xs text-red-600 dark:text-red-400'>
+                {recognizeError}
+              </p>
+            ) : null}
+            {recognition ? (
+              <div className='mt-2 rounded-lg border border-gray-200 dark:border-gray-700 p-2.5 space-y-2.5'>
+                <div className='flex items-center justify-between'>
+                  <p className='text-[11px] text-gray-500 dark:text-gray-400'>
+                    识别到 {recognition.total} 条种子，点击填入过滤关键词
+                  </p>
+                  <button
+                    type='button'
+                    onClick={() => setRecognition(null)}
+                    className='p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+                {recognition.fansubs.length === 0 ? (
+                  <p className='text-xs text-gray-400'>搜索结果为空</p>
+                ) : (
+                  recognition.fansubs.map((fansub) => (
+                    <div key={fansub.fansub}>
+                      <div className='flex items-baseline gap-1.5'>
+                        <span className='text-xs font-medium text-gray-800 dark:text-gray-100'>
+                          {fansub.fansub}
+                        </span>
+                        <span className='text-[10px] text-gray-400'>
+                          {fansub.count} 条
+                        </span>
+                      </div>
+                      <div className='mt-1 flex flex-wrap gap-1.5'>
+                        {fansub.variants.map((variant) => (
+                          <button
+                            key={variant.id}
+                            type='button'
+                            title={variant.sampleTitle}
+                            onClick={() => applyRecognition(fansub, variant)}
+                            className={chipClass(
+                              form.filterText ===
+                                buildFilterTextFromRecognition(
+                                  fansub.fansubFilter,
+                                  variant.filter
+                                )
+                            )}
+                          >
+                            {variant.label} ×{variant.count}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : null}
+            <p className='mt-1 text-[11px] text-gray-400'>字幕组</p>
+            <div className='mt-1.5 flex flex-wrap gap-1.5'>
+              {ANIME_FANSUB_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type='button'
+                  title={p.hint ? `${p.insert}\n${p.hint}` : p.insert}
+                  onClick={() => handleFansubSelect(p)}
+                  className={chipClass(isFansubPresetActive(form.filterText, p))}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'>
+              排除关键词
+            </label>
+            <input
+              value={form.excludeText}
+              onChange={(e) => setForm({ ...form, excludeText: e.target.value })}
+              className='w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm'
+              placeholder='先行|预告|PV'
+            />
+            <div className='mt-2 flex flex-wrap gap-1.5'>
+              {ANIME_EXCLUDE_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type='button'
+                  title={p.insert}
+                  onClick={() => handleExcludeSelect(p)}
+                  className={chipClass(isExcludePresetActive(form.excludeText, p))}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -225,8 +447,8 @@ export default function AnimeSubscribeModal({
               </button>
             </div>
             <input
-              value={episodeRegex}
-              onChange={(e) => setEpisodeRegex(e.target.value)}
+              value={form.episodeRegex}
+              onChange={(e) => setForm({ ...form, episodeRegex: e.target.value })}
               className='w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm'
               placeholder='第(\d{1,3})[话話集]'
             />
@@ -321,62 +543,87 @@ export default function AnimeSubscribeModal({
 
           <div className='grid grid-cols-2 gap-3'>
             <div>
-              <label className='mb-1 block text-sm text-gray-700 dark:text-gray-300'>来源</label>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'>
+                搜索源
+              </label>
               <select
-                value={source}
-                onChange={(e) => setSource(e.target.value as AnimeSource)}
-                className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-pink-500 dark:focus:ring-pink-900/50'
+                value={form.source}
+                onChange={(e) =>
+                  setForm({ ...form, source: e.target.value as SourceType })
+                }
+                className='w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm'
               >
-                <option value='mikan'>mikan</option>
-                <option value='acgrip'>acgrip</option>
-                <option value='dmhy'>dmhy</option>
-                <option value='nyaa'>nyaa</option>
+                <option value='mikan'>蜜柑</option>
+                <option value='acgrip'>ACG.RIP</option>
+                <option value='dmhy'>动漫花园</option>
+                <option value='nyaa'>Nyaa</option>
               </select>
             </div>
-
             <div>
-              <label className='mb-1 block text-sm text-gray-700 dark:text-gray-300'>最新集数</label>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'>
+                当前集数
+              </label>
               <input
                 type='number'
                 min={0}
-                value={lastEpisode}
-                onChange={(e) => setLastEpisode(Math.max(0, Number(e.target.value) || 0))}
-                className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-pink-500 dark:focus:ring-pink-900/50'
+                value={form.lastEpisode}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    lastEpisode: parseInt(e.target.value, 10) || 0,
+                  })
+                }
+                className='w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm'
               />
             </div>
           </div>
 
-          <label className='flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-300'>
+          <label className='flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300'>
             <input
               type='checkbox'
-              checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
-              className='h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500'
+              checked={form.onePerEpisode}
+              onChange={(e) =>
+                setForm({ ...form, onePerEpisode: e.target.checked })
+              }
+              className='rounded border-gray-300'
             />
-            启用订阅
+            单集只下载一次（同集多种子时只入队一条）
+          </label>
+          <label className='flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300'>
+            <input
+              type='checkbox'
+              checked={form.refillMissingEpisodes}
+              onChange={(e) =>
+                setForm({ ...form, refillMissingEpisodes: e.target.checked })
+              }
+              className='rounded border-gray-300'
+            />
+            缺集重新检索（跳集时按「番名+集数」补搜）
           </label>
 
-          {error ? <p className='text-sm text-red-500'>{error}</p> : null}
-        </div>
+          {error ? (
+            <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
+          ) : null}
 
-        <div className='flex items-center justify-end gap-2 border-t border-gray-200 px-4 py-3 dark:border-gray-700'>
-          <button
-            type='button'
-            onClick={onClose}
-            className='rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-            disabled={submitting}
-          >
-            取消
-          </button>
-          <button
-            type='button'
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className='inline-flex items-center gap-2 rounded-lg bg-pink-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-60'
-          >
-            {submitting ? <Loader2 className='h-4 w-4 animate-spin' /> : null}
-            {submitting ? '提交中...' : '添加'}
-          </button>
+          <div className='flex justify-end gap-2 pt-1'>
+            <button
+              type='button'
+              onClick={onClose}
+              disabled={loading}
+              className='px-4 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+            >
+              取消
+            </button>
+            <button
+              type='button'
+              onClick={handleSubmit}
+              disabled={loading}
+              className='px-4 py-2 rounded-lg text-sm bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2'
+            >
+              {loading ? <Loader2 size={16} className='animate-spin' /> : null}
+              添加订阅
+            </button>
+          </div>
         </div>
       </div>
     </div>,

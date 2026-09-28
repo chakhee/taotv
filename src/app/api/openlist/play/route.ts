@@ -228,6 +228,44 @@ export async function GET(request: NextRequest) {
     const folderPath = folderName;
     const filePath = `${folderPath}/${fileName}`;
 
+    const { resolvePathMeta } = await import('@/lib/openlist-path-meta');
+    const pathMetaResolved = resolvePathMeta(
+      folderPath,
+      openListConfig.PathMeta
+    );
+
+    // 路径开启了代理播放：直接返回服务器代理地址（代理端负责解析链接与缓存）
+    const { buildOpenListProxyUrl } = await import('@/lib/openlist-play-url');
+    const proxyUrl = pathMetaResolved.proxyPlay
+      ? buildOpenListProxyUrl({
+          token: 'proxy', // 固定 token，由登录 cookie 校验
+          folder: folderName,
+          fileName,
+        })
+      : '';
+
+    if (proxyUrl) {
+      if (format === 'json') {
+        return NextResponse.json({
+          url: proxyUrl,
+          refresh14m: false, // 代理链接稳定，无需 14 分钟续期
+          category: pathMetaResolved.category,
+          proxied: true,
+        });
+      }
+
+      // 默认返回重定向到代理地址（用于外部播放器）
+      const host =
+        request.headers.get('host') || request.headers.get('x-forwarded-host');
+      const proto =
+        request.headers.get('x-forwarded-proto') ||
+        (host?.includes('localhost') || host?.includes('127.0.0.1')
+          ? 'http'
+          : 'https');
+      const baseUrl = process.env.SITE_BASE || `${proto}://${host}`;
+      return NextResponse.redirect(`${baseUrl}${proxyUrl}`);
+    }
+
     const client = new OpenListClient(
       openListConfig.URL,
       openListConfig.Username,
@@ -258,14 +296,12 @@ export async function GET(request: NextRequest) {
       );
 
       if (format === 'json') {
-        const finalUrl = await getFinalUrl(fileResponse.data.raw_url);
-
-        // 检查URL是否为空
-        if (!finalUrl || finalUrl.trim() === '') {
-          throw new Error('获取到的播放链接为空');
-        }
-
-        return NextResponse.json({ url: finalUrl });
+        return NextResponse.json({
+          url: playUrl,
+          mediaType: await detectOpenListMediaType(playUrl),
+          refresh14m: pathMetaResolved.refresh14m,
+          category: pathMetaResolved.category,
+        });
       }
 
       return NextResponse.redirect(playUrl);
@@ -315,6 +351,8 @@ export async function GET(request: NextRequest) {
             resolvedQualities[0].url
           ),
           qualities: resolvedQualities,
+          refresh14m: pathMetaResolved.refresh14m,
+          category: pathMetaResolved.category,
         });
       }
 
@@ -346,14 +384,12 @@ export async function GET(request: NextRequest) {
       );
 
       if (format === 'json') {
-        const finalUrl = await getFinalUrl(fileResponse.data.raw_url);
-
-        // 检查URL是否为空
-        if (!finalUrl || finalUrl.trim() === '') {
-          throw new Error('获取到的播放链接为空');
-        }
-
-        return NextResponse.json({ url: finalUrl });
+        return NextResponse.json({
+          url: playUrl,
+          mediaType: await detectOpenListMediaType(playUrl),
+          refresh14m: pathMetaResolved.refresh14m,
+          category: pathMetaResolved.category,
+        });
       }
 
       return NextResponse.redirect(playUrl);

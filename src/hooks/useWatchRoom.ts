@@ -414,15 +414,13 @@ export function useWatchRoom(
   useEffect(() => {
     if (!socket) return;
 
-    type RoomJoinedPayload = { room: Room; members: Member[] };
-
     // 房间事件
-    socket.on('room:joined', (data: RoomJoinedPayload) => {
+    socket.on('room:joined', (data) => {
       setCurrentRoom(data.room);
       setMembers(data.members);
     });
 
-    socket.on('room:member-joined', (member: Member) => {
+    socket.on('room:member-joined', (member) => {
       setMembers((prev) => {
         const next = prev.filter((existing) => existing.id !== member.id);
         next.push(member);
@@ -430,7 +428,7 @@ export function useWatchRoom(
       });
     });
 
-    socket.on('room:member-left', (userId: string) => {
+    socket.on('room:member-left', (userId) => {
       setMembers((prev) => prev.filter((m) => m.id !== userId));
     });
 
@@ -447,28 +445,28 @@ export function useWatchRoom(
     });
 
     // 播放事件
-    socket.on('play:update', (state: PlayState) => {
+    socket.on('play:update', (state) => {
       if (currentRoom) {
         setCurrentRoom((prev) => (prev ? { ...prev, currentState: state } : null));
       }
     });
 
     // 视频切换事件（换集、换源）
-    socket.on('play:change', (state: PlayState) => {
+    socket.on('play:change', (state) => {
       if (currentRoom) {
         setCurrentRoom((prev) => (prev ? { ...prev, currentState: state } : null));
       }
     });
 
     // 直播频道切换事件
-    socket.on('live:change', (state: LiveState) => {
+    socket.on('live:change', (state) => {
       if (currentRoom) {
         setCurrentRoom((prev) => (prev ? { ...prev, currentState: state } : null));
       }
     });
 
     // 屏幕共享事件
-    socket.on('screen:start', (state: ScreenState) => {
+    socket.on('screen:start', (state) => {
       if (currentRoom) {
         setCurrentRoom((prev) => (prev ? { ...prev, currentState: state } : null));
       }
@@ -489,7 +487,7 @@ export function useWatchRoom(
     socket.on('music:change', handleMusicState);
     socket.on('music:update', handleMusicState);
     socket.on('music:queue', handleMusicState);
-    socket.on('music:play', (state: Partial<MusicSyncState>) => {
+    socket.on('music:play', (state) => {
       setCurrentRoom((prev) => {
         if (!prev || prev.currentState?.type !== 'music') return prev;
         return {
@@ -498,7 +496,7 @@ export function useWatchRoom(
         };
       });
     });
-    socket.on('music:pause', (state: Partial<MusicSyncState>) => {
+    socket.on('music:pause', (state) => {
       setCurrentRoom((prev) => {
         if (!prev || prev.currentState?.type !== 'music') return prev;
         return {
@@ -507,7 +505,7 @@ export function useWatchRoom(
         };
       });
     });
-    socket.on('music:seek', (state: Partial<MusicSyncState>) => {
+    socket.on('music:seek', (state) => {
       setCurrentRoom((prev) => {
         if (!prev || prev.currentState?.type !== 'music') return prev;
         return {
@@ -518,7 +516,7 @@ export function useWatchRoom(
     });
 
     // 聊天事件
-    socket.on('chat:message', (message: ChatMessage) => {
+    socket.on('chat:message', (message) => {
       setChatMessages((prev) => [...prev, message]);
     });
 

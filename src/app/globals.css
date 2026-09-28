@@ -8,14 +8,14 @@
 }
 
 #nprogress .bar {
-  background: #f472b6;
+  background: #3b82f6;
   position: fixed;
   z-index: 9999;
   top: 0;
   left: 0;
   width: 100%;
   height: 3px;
-  box-shadow: 0 0 10px rgba(244, 114, 182, 0.8), 0 0 5px rgba(244, 114, 182, 0.6);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 5px rgba(59, 130, 246, 0.6);
 }
 
 #nprogress .peg {
@@ -24,19 +24,19 @@
   right: 0px;
   width: 100px;
   height: 100%;
-  box-shadow: 0 0 10px rgba(244, 114, 182, 0.8), 0 0 5px rgba(244, 114, 182, 0.6);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 5px rgba(59, 130, 246, 0.6);
   opacity: 1.0;
   transform: rotate(3deg) translate(0px, -4px);
 }
 
 /* 暗色模式下的进度条样式 */
 .dark #nprogress .bar {
-  background: #f9a8d4;
-  box-shadow: 0 0 10px rgba(249, 168, 212, 0.8), 0 0 5px rgba(249, 168, 212, 0.6);
+  background: #60a5fa;
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.8), 0 0 5px rgba(96, 165, 250, 0.6);
 }
 
 .dark #nprogress .peg {
-  box-shadow: 0 0 10px rgba(249, 168, 212, 0.8), 0 0 5px rgba(249, 168, 212, 0.6);
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.8), 0 0 5px rgba(96, 165, 250, 0.6);
 }
 
 @layer utilities {
@@ -197,42 +197,6 @@ div[data-media-provider] video {
   background-color: #000 !important; /* 其余区域填充为黑色 */
 }
 
-/* 音量滑条圆点改为粉色 */
-.art-volume-panel .art-volume-indicator {
-  background-color: #f472b6 !important;
-  border-color: #f472b6 !important;
-  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.2);
-}
-
-/* 播放器的音量、弹幕设置和显示设置统一使用主题粉色。 */
-.art-video-player .art-volume-panel input[type='range'],
-.art-video-player .apd-config-panel input[type='range'],
-.art-video-player .apd-config-panel input[type='checkbox'] {
-  accent-color: #f472b6;
-}
-
-.art-video-player .art-volume-panel .art-volume-inner,
-.art-video-player .art-volume-panel .art-volume-progress,
-.art-video-player .apd-config-panel input[type='range']::-webkit-slider-thumb {
-  background-color: #f472b6 !important;
-}
-
-.art-video-player .art-setting-item.art-current,
-.art-video-player .art-setting-item.art-current .art-setting-item-left,
-.art-video-player .apd-config-panel .apd-config-item-active {
-  color: #f472b6 !important;
-}
-
-/* 弹幕插件开启勾图标改为粉色 */
-.art-video-player .apd-toggle-on path[fill="#00aeec"] {
-  fill: #f472b6 !important;
-}
-
-/* ArtPlayer 开关开启图标改为粉色 */
-.art-video-player .art-icon-switchOn svg path {
-  fill: #f472b6 !important;
-}
-
 /* 隐藏移动端竖屏时的 pip 按钮 */
 @media (max-width: 768px) {
   .art-control-pip {
@@ -336,6 +300,14 @@ div[data-media-provider] video {
     0 18px 44px rgba(0, 0, 0, 0.68),
     0 0 26px rgba(225, 29, 72, 0.38) !important;
   z-index: 30;
+}
+
+/* 白底卡片（如二维码）聚焦时保持浅色，避免扫码区域被深色焦点样式盖住 */
+.tv-focusable.tv-focusable-light:focus,
+.tv-focusable.tv-focusable-light:focus-visible,
+.tv-focusable.tv-focusable-light.tv-focused {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 .tv-focusable:focus::after,

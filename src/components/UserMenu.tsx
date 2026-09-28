@@ -22,6 +22,7 @@ import {
   MoveDown,
   MoveUp,
   Package,
+  Puzzle,
   Router as RouterIcon,
   Rss,
   Settings,
@@ -82,6 +83,7 @@ export const UserMenu: React.FC = () => {
   const [isEmailSettingsOpen, setIsEmailSettingsOpen] = useState(false);
   const [isDeviceManagementOpen, setIsDeviceManagementOpen] = useState(false);
   const [isEcoAppsOpen, setIsEcoAppsOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const [isDownloadManagementOpen, setIsDownloadManagementOpen] =
     useState(false);
   const [isTVRemoteOpen, setIsTVRemoteOpen] = useState(false);
@@ -126,6 +128,7 @@ export const UserMenu: React.FC = () => {
       isEmailSettingsOpen ||
       isDeviceManagementOpen ||
       isEcoAppsOpen ||
+      isReportOpen ||
       isDownloadManagementOpen ||
       isTvQrScannerOpen ||
       isTVRemoteOpen
@@ -156,6 +159,7 @@ export const UserMenu: React.FC = () => {
     isEmailSettingsOpen,
     isDeviceManagementOpen,
     isEcoAppsOpen,
+    isReportOpen,
     isDownloadManagementOpen,
     isTvQrScannerOpen,
     isTVRemoteOpen,
@@ -346,6 +350,7 @@ export const UserMenu: React.FC = () => {
   const animeDataSourceOptions = [
     { value: 'direct', label: '直连（浏览器直连 Bangumi）' },
     { value: 'server-proxy', label: '服务器代理（由服务器访问 Bangumi）' },
+    { value: 'sakura', label: '桜色镜像站（bangumi.lol）' },
     { value: 'custom-baseurl', label: '自定义 Base URL' },
   ];
 
@@ -3911,7 +3916,7 @@ export const UserMenu: React.FC = () => {
                             handleAggregateToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -3937,7 +3942,7 @@ export const UserMenu: React.FC = () => {
                             handleOptimizationToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4145,7 +4150,7 @@ export const UserMenu: React.FC = () => {
                             handleFluidSearchToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4171,7 +4176,7 @@ export const UserMenu: React.FC = () => {
                             handleTmdbBackdropDisabledToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4197,7 +4202,7 @@ export const UserMenu: React.FC = () => {
                             handleEnableTrailersToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4225,7 +4230,7 @@ export const UserMenu: React.FC = () => {
                             )
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4251,7 +4256,7 @@ export const UserMenu: React.FC = () => {
                             handleExactSearchToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4339,7 +4344,7 @@ export const UserMenu: React.FC = () => {
                         }
                         className='flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700'
                         style={{
-                          background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${
+                          background: `linear-gradient(to right, #10b981 0%, #10b981 ${
                             ((maxConcurrentDownloads - 1) / (10 - 1)) * 100
                           }%, #e5e7eb ${
                             ((maxConcurrentDownloads - 1) / (10 - 1)) * 100
@@ -4738,7 +4743,7 @@ export const UserMenu: React.FC = () => {
                             handleNextEpisodePreCacheToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4843,7 +4848,7 @@ export const UserMenu: React.FC = () => {
                             handleDisableAutoLoadDanmakuToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4871,7 +4876,7 @@ export const UserMenu: React.FC = () => {
                             )
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4897,7 +4902,7 @@ export const UserMenu: React.FC = () => {
                             handleDanmakuHeatmapDisabledToggle(e.target.checked)
                           }
                         />
-                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-pink-500 transition-colors dark:bg-gray-600'></div>
+                        <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                         <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
                       </div>
                     </label>
@@ -4971,7 +4976,7 @@ export const UserMenu: React.FC = () => {
                         onClick={() => handleDanmakuMaxCountChange(0)}
                         className={`absolute px-2 py-0.5 rounded ${
                           danmakuMaxCount === 0
-                            ? 'bg-pink-500 text-white'
+                            ? 'bg-green-500 text-white'
                             : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         style={{ left: '0%', transform: 'translateX(0%)' }}
@@ -4982,7 +4987,7 @@ export const UserMenu: React.FC = () => {
                         onClick={() => handleDanmakuMaxCountChange(3000)}
                         className={`absolute px-2 py-0.5 rounded ${
                           danmakuMaxCount === 3000
-                            ? 'bg-pink-500 text-white'
+                            ? 'bg-green-500 text-white'
                             : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         style={{ left: '30%', transform: 'translateX(-50%)' }}
@@ -4993,7 +4998,7 @@ export const UserMenu: React.FC = () => {
                         onClick={() => handleDanmakuMaxCountChange(5000)}
                         className={`absolute px-2 py-0.5 rounded ${
                           danmakuMaxCount === 5000
-                            ? 'bg-pink-500 text-white'
+                            ? 'bg-green-500 text-white'
                             : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         style={{ left: '50%', transform: 'translateX(-50%)' }}
@@ -5004,7 +5009,7 @@ export const UserMenu: React.FC = () => {
                         onClick={() => handleDanmakuMaxCountChange(10000)}
                         className={`absolute px-2 py-0.5 rounded ${
                           danmakuMaxCount === 10000
-                            ? 'bg-pink-500 text-white'
+                            ? 'bg-green-500 text-white'
                             : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         style={{ left: '100%', transform: 'translateX(-100%)' }}
@@ -5307,7 +5312,7 @@ export const UserMenu: React.FC = () => {
                   {/* 提示信息 */}
                   <div className='text-xs text-gray-500 dark:text-gray-400 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg'>
                     <p>
-                      ??
+                      💡
                       提示：点击眼睛图标可显示/隐藏模块，使用箭头按钮调整模块顺序
                     </p>
                   </div>
@@ -5540,7 +5545,7 @@ export const UserMenu: React.FC = () => {
                     </div>
                     {(subscribeAdFilterEnabled || subscribeYellowFilterEnabled) && (
                       <p className='mt-2 rounded-xl border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-semibold text-yellow-700 dark:text-yellow-300'>
-                        ?? 代理模式已开启，某些源可能因为区域或兼容问题无法播放
+                        💡 代理模式已开启，某些源可能因为区域或兼容问题无法播放
                       </p>
                     )}
                   </div>
@@ -5554,7 +5559,7 @@ export const UserMenu: React.FC = () => {
                       {isResettingToken ? '重置中...' : '重置订阅Token'}
                     </button>
                     <p className='mt-2 text-center text-xs text-slate-500 dark:text-slate-400'>
-                      ?? 重置后旧链接将失效
+                      ⚠️ 重置后旧链接将失效
                     </p>
                     <p id='tvbox-token-message' className='hidden text-center text-xs'></p>
                   </div>
@@ -5795,6 +5800,86 @@ export const UserMenu: React.FC = () => {
     </>
   );
 
+  // 举报信息弹窗
+  const reportPanel = (
+    <>
+      {/* 背景遮罩 */}
+      <div
+        className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[1002]'
+        onClick={() => setIsReportOpen(false)}
+        onTouchMove={(e) => {
+          e.preventDefault();
+        }}
+        onWheel={(e) => {
+          e.preventDefault();
+        }}
+        style={{
+          touchAction: 'none',
+        }}
+      />
+
+      {/* 举报信息面板 */}
+      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1003] overflow-hidden'>
+        <div
+          className='h-full max-h-[70vh] flex flex-col'
+          data-panel-content
+          onTouchMove={(e) => {
+            e.stopPropagation();
+          }}
+          style={{
+            touchAction: 'auto',
+          }}
+        >
+          {/* 标题栏 */}
+          <div className='flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700'>
+            <h3 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+              耻辱柱
+            </h3>
+            <button
+              onClick={() => setIsReportOpen(false)}
+              className='w-8 h-8 p-1 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
+              aria-label='Close'
+            >
+              <X className='w-full h-full' />
+            </button>
+          </div>
+
+          {/* 内容区域 */}
+          <div className='flex-1 overflow-y-auto p-6'>
+            <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4'>
+              <p className='text-gray-800 dark:text-gray-200 leading-relaxed'>
+                抄袭狗
+                <span className='font-bold text-red-600 dark:text-red-400'>
+                  SzeMeng76
+                </span>
+                毫无廉耻，盯着本项目的commit区，疯狂抄袭。警告亦全当看不见，实为开源界耻辱。
+              </p>
+              <p className='text-gray-800 dark:text-gray-200 leading-relaxed mt-3'>
+                超分，观影室，豆瓣反爬，精确搜索等等等等，直接抄袭，最不要脸的就是，刚更新一版，几小时后直接抄走。
+              </p>
+              <p className='text-gray-800 dark:text-gray-200 leading-relaxed mt-3'>
+                <span className='font-semibold text-red-600 dark:text-red-400'>
+                  2026-02-25：
+                </span>
+                抄袭emby功能
+              </p>
+            </div>
+          </div>
+
+          {/* 底部按钮 */}
+          <div className='p-6 border-t border-gray-200 dark:border-gray-700'>
+            <button
+              onClick={() => setIsReportOpen(false)}
+              className='w-full px-4 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors'
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
   // 生态应用面板内容
   const ecoAppsPanel = (
     <>
@@ -5831,6 +5916,15 @@ export const UserMenu: React.FC = () => {
               生态应用
             </h3>
             <div className='flex items-center gap-2'>
+              {/* 举报按钮 */}
+              <button
+                onClick={() => setIsReportOpen(true)}
+                className='w-8 h-8 p-1 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-lg'
+                aria-label='Report'
+                title='举报抄袭'
+              >
+                🐶
+              </button>
               {/* 关闭按钮 */}
               <button
                 onClick={() => setIsEcoAppsOpen(false)}
@@ -5904,7 +5998,7 @@ export const UserMenu: React.FC = () => {
                         href='https://github.com/mtvpls/Selene-Build/releases'
                         target='_blank'
                         rel='noopener noreferrer'
-                        className='inline-flex items-center gap-2 px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium rounded-lg transition-colors'
+                        className='inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors'
                       >
                         <Download className='w-4 h-4' />
                         下载
@@ -5973,6 +6067,39 @@ export const UserMenu: React.FC = () => {
                       target='_blank'
                       rel='noopener noreferrer'
                       className='inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors'
+                    >
+                      <Download className='w-4 h-4' />
+                      下载
+                      <ExternalLink className='w-3 h-3' />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* MoonTVPlus 插件 */}
+              <div className='bg-gray-50 dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-700'>
+                <div className='flex items-start gap-4'>
+                  <div className='flex-shrink-0 relative'>
+                    <div className='w-16 h-16 rounded-xl bg-purple-500 flex items-center justify-center shadow-sm'>
+                      <Puzzle className='w-8 h-8 text-white' />
+                    </div>
+                    <span className='absolute -top-1 -right-1 px-1.5 py-0.5 bg-purple-600 text-white text-[10px] font-bold rounded'>
+                      插件
+                    </span>
+                  </div>
+                  <div className='flex-1 min-w-0'>
+                    <h4 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
+                      MoonTVPlus 插件
+                    </h4>
+                    <p className='text-sm text-gray-600 dark:text-gray-400 mb-3'>
+                      为 MoonTVPlus
+                      提供增强性功能，目前拥有解决私人影库超分跨域能力
+                    </p>
+                    <a
+                      href='https://github.com/mtvpls/moontvplus-extension/releases'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='inline-flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors'
                     >
                       <Download className='w-4 h-4' />
                       下载
@@ -6161,6 +6288,9 @@ export const UserMenu: React.FC = () => {
 
       {/* 使用 Portal 将生态应用面板渲染到 document.body */}
       {isEcoAppsOpen && mounted && createPortal(ecoAppsPanel, document.body)}
+
+      {/* 使用 Portal 将举报信息面板渲染到 document.body */}
+      {isReportOpen && mounted && createPortal(reportPanel, document.body)}
 
       {/* 确认对话框 */}
       {confirmDialog.isOpen &&

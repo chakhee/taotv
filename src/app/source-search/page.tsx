@@ -11,14 +11,15 @@ import {
   useState,
 } from 'react';
 
-import { ApiSite } from '@/lib/config';
+import { isAnimeCategoryText } from '@/lib/anime-keyword-expr';
 import {
+  CategoryNode,
   getChildCategories,
   getParentCategories,
   isHierarchicalCategories,
   pickDefaultSelection,
-  type CategoryNode,
 } from '@/lib/category-tree';
+import { ApiSite } from '@/lib/config';
 import { appendSpecialSourceParam } from '@/lib/special-source.client';
 import { SearchResult } from '@/lib/types';
 
@@ -688,6 +689,11 @@ function SourceSearchPageClient() {
                         year={item.year}
                         from='source-search'
                         type={item.episodes.length > 1 ? 'tv' : 'movie'}
+                        isAnime={isAnimeCategoryText(
+                          item.type_name,
+                          item.class
+                        )}
+                        typeName={item.type_name || item.class}
                         cmsData={{
                           desc: item.desc,
                           episodes: item.episodes,

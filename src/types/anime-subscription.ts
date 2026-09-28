@@ -1,11 +1,35 @@
 export interface AnimeSubscription {
   id: string;
   title: string;
+  /**
+   * 包含关键词表达式。
+   * 支持 &（且）|（或）()；无运算符时逗号为 AND（兼容旧数据）。
+   * 例：喵萌奶茶屋&(简日双语|简日内嵌)
+   */
   filterText: string;
+  /**
+   * 排除关键词表达式。
+   * 支持 & | ()；无运算符时逗号为 OR（兼容旧数据）。
+   * 例：先行|预告|PV
+   */
   excludeText?: string;
-  episodeRegex?: string;
   source: 'acgrip' | 'mikan' | 'dmhy' | 'nyaa';
   enabled: boolean;
+  /**
+   * 单集只下载一次：同一集匹配到多个种子时只入队一条（可选，默认 false）
+   */
+  onePerEpisode?: boolean;
+  /**
+   * 缺集重新检索：首搜若跳集（如已看到 1，结果只有 11/12），
+   * 则对中间缺集按「番名 + 补零集数」再搜（可选，默认 false）
+   */
+  refillMissingEpisodes?: boolean;
+  /**
+   * 自定义集数提取正则（可选）。
+   * 留空使用内置规则；填写后优先生效，首个捕获组作为集数（无捕获组时取整个匹配）。
+   * 例：第(\d{1,3})[话話集]
+   */
+  episodeRegex?: string;
   lastCheckTime: number;
   lastEpisode: number;
   createdAt: number;

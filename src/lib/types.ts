@@ -13,10 +13,11 @@ export interface PlayRecord {
   play_time: number; // 播放进度（秒）
   total_time: number; // 总进度（秒）
   save_time: number; // 记录保存时间（时间戳）
-  search_title?: string; // 搜索时使用的标题
-  origin?: 'vod' | 'live'; // 来源类型
+  search_title: string; // 搜索时使用的标题
   new_episodes?: number; // 新增的剧集数量（用于显示更新提示）
-  is_anime?: boolean; // 是否判定为动漫
+  origin?: 'vod' | 'live';
+  /** 是否动漫（写入时根据 CMS type_name/class 判断） */
+  is_anime?: boolean;
 }
 
 // 收藏数据结构
@@ -27,23 +28,10 @@ export interface Favorite {
   year: string;
   cover: string;
   save_time: number; // 记录保存时间（时间戳）
-  search_title?: string; // 搜索时使用的标题
+  search_title: string; // 搜索时使用的标题
   origin?: 'vod' | 'live';
   is_completed?: boolean; // 是否已完结
   vod_remarks?: string; // 视频备注信息
-}
-
-// 音乐播放记录数据结构
-export interface MusicPlayRecord {
-  platform: 'netease' | 'qq' | 'kuwo'; // 音乐平台
-  id: string; // 歌曲ID
-  name: string; // 歌曲名
-  artist: string; // 艺术家
-  album?: string; // 专辑
-  pic?: string; // 封面图
-  play_time: number; // 播放进度（秒）
-  duration: number; // 总时长（秒）
-  save_time: number; // 记录保存时间（时间戳）
 }
 
 // 存储接口
@@ -354,7 +342,10 @@ export interface SearchResult {
   rating?: number; // 评分
   initialEpisodeIndex?: number; // 初始集数索引（用于小雅源从文件点击进入时指定集数）
   metadataSource?: 'folder' | 'nfo' | 'tmdb' | 'file'; // 元数据来源（用于小雅源判断是否保留fileName）
-  refresh14m?: boolean; // OpenList/xiaoya 链接是否需要 14 分钟续期
+  /** OpenList 路径元信息：是否启用 14 分钟播放 URL 续期 */
+  refresh14m?: boolean;
+  /** OpenList 路径元信息：分类 */
+  category?: string;
 }
 
 // 豆瓣数据结构

@@ -1,6 +1,26 @@
 'use client';
 
-export type AnimeDataSource = 'direct' | 'server-proxy' | 'custom-baseurl';
+export type AnimeDataSource =
+  | 'direct'
+  | 'server-proxy'
+  | 'custom-baseurl'
+  | 'sakura';
+
+/** 桜色镜像站：全域名镜像 bgm.tv → bangumi.lol */
+export const BANGUMI_SAKURA_API_BASE_URL = 'https://api.bangumi.lol';
+export const BANGUMI_SAKURA_SITE_URL = 'https://bangumi.lol';
+export const BANGUMI_OFFICIAL_SITE_URL = 'https://bgm.tv';
+
+export function isValidAnimeDataSource(
+  value: string | null | undefined
+): value is AnimeDataSource {
+  return (
+    value === 'direct' ||
+    value === 'server-proxy' ||
+    value === 'custom-baseurl' ||
+    value === 'sakura'
+  );
+}
 
 export interface BangumiCalendarData {
   weekday: {
@@ -106,22 +126,14 @@ function getPrimaryAnimeDataSource(): AnimeDataSource {
   const saved = localStorage.getItem(
     'animeDataSource'
   ) as AnimeDataSource | null;
-  if (
-    saved === 'direct' ||
-    saved === 'server-proxy' ||
-    saved === 'custom-baseurl'
-  ) {
+  if (isValidAnimeDataSource(saved)) {
     return saved;
   }
 
   const runtimeValue = getRuntimeConfig().BANGUMI_DATA_SOURCE as
     | AnimeDataSource
     | undefined;
-  if (
-    runtimeValue === 'direct' ||
-    runtimeValue === 'server-proxy' ||
-    runtimeValue === 'custom-baseurl'
-  ) {
+  if (isValidAnimeDataSource(runtimeValue)) {
     return runtimeValue;
   }
 
@@ -137,10 +149,7 @@ function getBackupAnimeDataSource(
   const saved = localStorage.getItem(
     'animeDataSourceBackup'
   ) as AnimeDataSource | null;
-  const backup =
-    saved === 'direct' || saved === 'server-proxy' || saved === 'custom-baseurl'
-      ? saved
-      : 'server-proxy';
+  const backup = isValidAnimeDataSource(saved) ? saved : 'server-proxy';
 
   return backup === primary ? null : backup;
 }
@@ -163,10 +172,21 @@ function buildBangumiUrl(source: AnimeDataSource, path: string): string {
       }
       return `${customBaseUrl}${normalizedPath}`;
     }
+    case 'sakura':
+      return `${BANGUMI_SAKURA_API_BASE_URL}${normalizedPath}`;
     case 'direct':
     default:
       return `${BANGUMI_OFFICIAL_BASE_URL}${normalizedPath}`;
   }
+}
+
+/** 按当前动漫数据源生成 Bangumi 条目外链（桜色镜像站 → bangumi.lol） */
+export function getBangumiSubjectUrl(id: string | number): string {
+  const origin =
+    getPrimaryAnimeDataSource() === 'sakura'
+      ? BANGUMI_SAKURA_SITE_URL
+      : BANGUMI_OFFICIAL_SITE_URL;
+  return `${origin}/subject/${encodeURIComponent(String(id))}`;
 }
 
 async function fetchBangumiJson<T>(
@@ -207,22 +227,19 @@ async function requestWithFallback<T>(path: string): Promise<T> {
   }
 }
 
+// 日历缓存：复用首页「新番放送」的 localStorage 缓存（homepage_bangumi），
+// 首页 / tv 动漫更新时间表 / 豆瓣每日放送 共用同一份数据，避免重复请求 Bangumi。
 const BANGUMI_CALENDAR_CACHE_KEY = 'homepage_bangumi';
-const BANGUMI_CALENDAR_CACHE_TTL = 60 * 60 * 1000;
-const BANGUMI_SCHEDULE_CACHE_KEY = 'homepage_bangumi_schedule';
-const BANGUMI_SCHEDULE_CACHE_TTL = 10 * 60 * 1000;
+const BANGUMI_CALENDAR_CACHE_TTL = 60 * 60 * 1000; // 1 小时，与首页保持一致
 
 function readBangumiCalendarCache(): BangumiCalendarData[] | null {
   if (typeof window === 'undefined') return null;
-
   try {
     const raw = localStorage.getItem(BANGUMI_CALENDAR_CACHE_KEY);
     if (!raw) return null;
-
     const { data, timestamp } = JSON.parse(raw);
     if (!Array.isArray(data) || data.length === 0) return null;
     if (Date.now() - timestamp > BANGUMI_CALENDAR_CACHE_TTL) return null;
-
     return data;
   } catch {
     return null;
@@ -230,10 +247,8 @@ function readBangumiCalendarCache(): BangumiCalendarData[] | null {
 }
 
 function writeBangumiCalendarCache(data: BangumiCalendarData[]): void {
-  if (typeof window === 'undefined' || !Array.isArray(data) || data.length === 0) {
-    return;
-  }
-
+  if (typeof window === 'undefined') return;
+  if (!Array.isArray(data) || data.length === 0) return;
   try {
     localStorage.setItem(
       BANGUMI_CALENDAR_CACHE_KEY,
@@ -244,6 +259,7 @@ function writeBangumiCalendarCache(data: BangumiCalendarData[]): void {
   }
 }
 
+/** 获取 BGM 日历（首页新番放送 / tv 每日放送 / 豆瓣每日放送共用），带 1 小时 localStorage 缓存 */
 export async function GetBangumiCalendarData(): Promise<BangumiCalendarData[]> {
   const cached = readBangumiCalendarCache();
   if (cached) return cached;
@@ -253,61 +269,26 @@ export async function GetBangumiCalendarData(): Promise<BangumiCalendarData[]> {
   return data;
 }
 
-export async function getBangumiSubject(
-  id: number | string
-): Promise<BangumiSubjectData> {
-  return requestWithFallback<BangumiSubjectData>(
-    `/v0/subjects/${encodeURIComponent(String(id))}`
-  );
-}
-
-function readBangumiScheduleCache(): BangumiScheduleData | null {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const raw = localStorage.getItem(BANGUMI_SCHEDULE_CACHE_KEY);
-    if (!raw) return null;
-
-    const { data, timestamp } = JSON.parse(raw);
-    if (!data || !Array.isArray(data.days)) return null;
-    if (Date.now() - timestamp > BANGUMI_SCHEDULE_CACHE_TTL) return null;
-
-    return data as BangumiScheduleData;
-  } catch {
-    return null;
-  }
-}
-
-function writeBangumiScheduleCache(data: BangumiScheduleData): void {
-  if (typeof window === 'undefined' || !data || !Array.isArray(data.days)) return;
-
-  try {
-    localStorage.setItem(
-      BANGUMI_SCHEDULE_CACHE_KEY,
-      JSON.stringify({ data, timestamp: Date.now() })
-    );
-  } catch {
-    // localStorage 不可用时忽略
-  }
-}
-
+/**
+ * 获取「每日放送」时刻表数据（周一到周日 + 未知放送时间）。
+ * 走自建 /api/bangumi/schedule 路由（服务端聚合 BGM 日历 + LiveChart）。
+ */
 export async function GetBangumiScheduleData(): Promise<BangumiScheduleData> {
-  const cached = readBangumiScheduleCache();
-  if (cached) return cached;
-
   const response = await fetch('/api/bangumi/schedule', {
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(30000),
   });
 
   if (!response.ok) {
     throw new Error(`Bangumi 时刻表请求失败: ${response.status}`);
   }
 
-  const data = (await response.json()) as BangumiScheduleData;
-  writeBangumiScheduleCache(data);
-  return data;
+  return response.json() as Promise<BangumiScheduleData>;
 }
 
-export function getBangumiSubjectUrl(id: number | string): string {
-  return `https://bgm.tv/subject/${encodeURIComponent(String(id))}`;
+export async function getBangumiSubject(
+  id: number | string
+): Promise<BangumiSubjectData> {
+  return requestWithFallback<BangumiSubjectData>(
+    `/v0/subjects/${encodeURIComponent(String(id))}`
+  );
 }
