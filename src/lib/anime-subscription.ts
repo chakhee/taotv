@@ -207,6 +207,56 @@ export async function searchACG(
   });
 }
 
+export async function testEpisodeFilter(input: {
+  title: string;
+  filterText: string;
+  excludeText?: string;
+  source: 'acgrip' | 'mikan' | 'dmhy' | 'nyaa';
+  episodeRegex?: string;
+  lastEpisode?: number;
+}) {
+  const results = await searchACG(input.title, input.source);
+  const excludeTokens = (input.excludeText || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const episodeRegex = (input.episodeRegex || '').trim();
+  const lastEpisode = Number(input.lastEpisode || 0);
+
+  const tested = results.map((item: any) => {
+    const matchesInclude = matchesFilter(item.title, input.filterText);
+    const matchesExclude =
+      excludeTokens.length > 0 &&
+      excludeTokens.some((token) => item.title.includes(token));
+    const episode = extractEpisode(item.title, episodeRegex);
+    const isNew =
+      typeof episode === 'number' && Number.isFinite(lastEpisode)
+        ? episode > lastEpisode
+        : true;
+
+    return {
+      ...item,
+      episode,
+      matchesInclude,
+      matchesExclude,
+      accepted: matchesInclude && !matchesExclude && Boolean(isNew),
+    };
+  });
+
+  const accepted = tested
+    .filter((item) => item.accepted)
+    .sort((a, b) => (a.episode || 0) - (b.episode || 0));
+
+  return {
+    total: tested.length,
+    matched: accepted.length,
+    episodes: accepted
+      .map((item) => item.episode)
+      .filter((item): item is number => typeof item === 'number'),
+    items: tested,
+  };
+}
+
 /**
  * 添加离线下载任务
  */

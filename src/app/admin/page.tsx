@@ -373,6 +373,7 @@ interface SiteConfig {
   TMDBApiKey?: string;
   TMDBProxy?: string;
   TMDBReverseProxy?: string;
+  TMDBImageBaseUrl?: string;
   BangumiDataSource?: 'direct' | 'server-proxy' | 'custom-baseurl';
   BangumiApiBaseUrl?: string;
   BangumiImageBaseUrl?: string;
