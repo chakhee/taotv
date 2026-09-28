@@ -2,6 +2,8 @@ export interface AnimeSubscription {
   id: string;
   title: string;
   filterText: string;
+  excludeText?: string;
+  episodeRegex?: string;
   source: 'acgrip' | 'mikan' | 'dmhy' | 'nyaa';
   enabled: boolean;
   lastCheckTime: number;
