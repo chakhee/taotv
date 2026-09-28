@@ -11,325 +11,38 @@ import { createAnime4KRenderer } from '@/lib/anime4k';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import {
   clearDanmakuCacheByTitle,
-  convertDanmakuFormat,
-  getDanmakuById,
-  getDanmakuFromCache,
-  getEpisodes,
-  initDanmakuModule,
-  loadDanmakuDisplayState,
-  loadDanmakuSettings,
-  saveDanmakuDisplayState,
-  saveDanmakuSettings,
-  searchAnime,
-} from '@/lib/danmaku/api';
-import {
-  getDanmakuAnimeId,
-  getDanmakuSearchKeyword,
-  getDanmakuSourceIndex,
-  getManualDanmakuSelection,
-  saveDanmakuAnimeId,
-  saveDanmakuSearchKeyword,
-  saveDanmakuSourceIndex,
-  saveManualDanmakuSelection,
-} from '@/lib/danmaku/selection-memory';
-import { cleanEpisodeDisplayName } from '@/lib/danmaku/format';
-import {
-  getCachedDanmakuEpisodes,
-  setCachedDanmakuEpisodes,
-} from '@/lib/danmaku/episodes-cache';
-import type { DanmakuAnime, DanmakuComment, DanmakuSelection, DanmakuSettings } from '@/lib/danmaku/types';
-import type { EpisodeTitleCorrection } from '@/lib/episode-title-correction';
-import {
-  EPISODE_TITLE_CORRECTION_EVENT,
-  getEpisodeTitleCorrection,
-} from '@/lib/episode-title-correction';
-import {
-  deleteFavorite,
-  deleteSkipConfig,
-  generateStorageKey,
-  getAllPlayRecords,
-  getDanmakuFilterConfig,
-  getEpisodeFilterConfig,
-  getSkipConfig,
-  isFavorited,
-  migratePlayRecord,
-  saveFavorite,
-  savePlayRecord,
-  saveSkipConfig,
-  subscribeToDataUpdates,
-} from '@/lib/db.client';
-import { getDoubanDetail } from '@/lib/douban.client';
-import { isEpisodeHiddenByFilter, normalizeEpisodeFilterConfig } from '@/lib/episode-filter';
-import { appendSpecialSourceParam, isSpecialSourcesEnabledOnDevice } from '@/lib/special-source.client';
-import {
-  buildEpisodeProgressContentKey,
-  loadLocalEpisodeProgress,
-  pruneLocalEpisodeProgressStorage,
-  saveLocalEpisodeProgress,
-} from '@/lib/episode-progress';
-import { isNetdiskSource, normalizeNetdiskSource } from '@/lib/netdisk/source';
-import {
-  getRecommendationCache,
-  recommendationCacheKeys,
-  setRecommendationCache,
-} from '@/lib/recommendations/cache';
-import { getIndexedDBVideoPlaybackUrl } from '@/lib/indexeddb-video-cache';
-import {
-  convertSubtitleFileToVttObjectUrl,
-  CUSTOM_SUBTITLE_ACCEPT,
-} from '@/lib/subtitle-converter';
-import { getTMDBImageUrl } from '@/lib/tmdb.search';
-import { DanmakuFilterConfig, EpisodeFilterConfig, SearchResult } from '@/lib/types';
-import { base58Decode, getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
-import { useEnableAIComments } from '@/hooks/useEnableAIComments';
-import { useEnableComments } from '@/hooks/useEnableComments';
-import { useWatchRoomContextSafe } from '@/components/WatchRoomProvider';
-import {
-  getRoomRemotePlaybackRate,
-  isRemoteRoomRateActive,
-  usePlaySync,
-} from '@/hooks/usePlaySync';
 
-import AIChatPanel from '@/components/AIChatPanel';
-import AIComments from '@/components/AIComments';
-import CorrectDialog from '@/components/CorrectDialog';
-import DanmakuFilterSettings from '@/components/DanmakuFilterSettings';
-import DetailPanel from '@/components/DetailPanel';
-import DoubanComments from '@/components/DoubanComments';
-import DownloadEpisodeSelector from '@/components/DownloadEpisodeSelector';
-import Drawer from '@/components/Drawer';
-import EpisodeSelector from '@/components/EpisodeSelector';
-import LoadingStyle, {
-  LoadingErrorStyle,
-  type LoadingStep,
-} from '@/components/LoadingStyle';
-import PageLayout from '@/components/PageLayout';
-import PansouSearch from '@/components/PansouSearch';
-import ProxyImage from '@/components/ProxyImage';
-import { useSite } from '@/components/SiteProvider';
-import SmartRecommendations from '@/components/SmartRecommendations';
-import Toast, { ToastProps } from '@/components/Toast';
-import VideoCard from '@/components/VideoCard';
 
-import { useDownload } from '@/contexts/DownloadContext';
-
-// 扩展 HTMLVideoElement 类型以支持 hls 属性
-declare global {
-  interface HTMLVideoElement {
-    hls?: any;
-  }
-}
-
-// Wake Lock API 类型声明
-interface WakeLockSentinel {
-  released: boolean;
-  release(): Promise<void>;
-  addEventListener(type: 'release', listener: () => void): void;
-  removeEventListener(type: 'release', listener: () => void): void;
-}
-
-interface PlayFallbackRecommendation {
-  key: string;
-  item: SearchResult;
-  episodes?: number;
-  sourceNames: string[];
-  doubanId?: number;
-}
-
-interface SearchCachePayload {
-  status: 'complete' | 'partial';
-  results: SearchResult[];
-  query: string;
-  updatedAt: number;
-}
-
-type CustomSubtitleEngine = 'native' | 'jassub' | 'bitsub';
-type PlaybackSourceBadge = 'local' | 'offline' | null;
-type HarmonyHlsPlaybackMode = 'hlsjs' | 'native';
-type NetdiskHlsPlaybackMode = 'hlsjs' | 'native';
-
-interface CustomSubtitleState {
-  name: string;
-  format: string;
-  episodeIndex: number;
-  engine: CustomSubtitleEngine;
-  url?: string;
-  content?: string;
-  /** bitsub 引擎（PGS 位图字幕）的原始二进制内容 */
-  binaryContent?: ArrayBuffer;
-}
-
-interface SourceSubtitleItem {
-  label: string;
-  url: string;
-  fallbackUrl?: string;
-  fallbackFormat?: string;
-  format?: string;
-  sourceFormat?: string;
-  codec?: string;
-  renderMode?: 'native' | 'jassub' | 'bitsub';
-}
-
-interface BitsubRendererInstance {
-  dispose?: () => void;
-}
-
-interface JassubSubtitleInstance {
-  setTrack?: (content: string) => void | Promise<void>;
-  setTrackByUrl?: (url: string) => void | Promise<void>;
-  freeTrack?: () => void | Promise<void>;
-  destroy?: () => void | Promise<void>;
-}
-
-const PLAYBACK_RATE_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
-const HARMONY_HLS_PLAYBACK_MODE_KEY = 'harmony_hls_playback_mode';
-const NETDISK_HLS_PLAYBACK_MODE_KEY = 'netdisk_hls_playback_mode';
-const JASSUB_ASSET_BASE = '/assets/jassub';
-const JASSUB_CJK_FONT_FAMILY = 'noto sans cjk sc';
-const JASSUB_CJK_FONT_URL = `${JASSUB_ASSET_BASE}/NotoSansCJK-Regular.ttc`;
-const ADVANCED_SUBTITLE_FORMATS = new Set(['ass', 'ssa']);
-const BITSUB_SUBTITLE_FORMATS = new Set(['pgs', 'sup']);
-// libbitsub 以原生 ESM 形式自托管在 public/libbitsub/（由 next.config.js 从
-// node_modules 拷贝），运行时绕过 webpack 加载，避免 wasm 胶水被 swc 压缩破坏。
-// 注意必须运行时构造 URL：字面量 import('/libbitsub/...') 会被 OpenNext 的
-// esbuild 在 server 产物里当作可解析模块而报 Could not resolve
-const getBitsubModuleUrl = () =>
-  new URL('/libbitsub/dist/index.js', window.location.href).href;
-
-const isHlsPlaybackUrl = (url: string) =>
-  /\.m3u8?(?:$|[/?#])/i.test(url) ||
-  url.includes('/api/proxy-m3u8') ||
-  url.includes('/api/proxy/vod/m3u8');
-
-const PLAY_SHORTCUT_GROUPS = [
-  {
-    title: '播放控制',
-    items: [
-      { keys: ['空格'], description: '播放 / 暂停' },
-      { keys: ['←', '→'], description: '快退 / 快进 10 秒' },
-      { keys: ['P'], description: '快捷快进' },
-      { keys: ['↑', '↓'], description: '音量增加 / 减少' },
-      { keys: ['F'], description: '切换全屏' },
-    ],
-  },
-  {
-    title: '剧集切换',
-    items: [
-      { keys: ['Alt', '←'], description: '上一集' },
-      { keys: ['Alt', '→'], description: '下一集' },
-    ],
-  },
-  {
-    title: '倍速控制',
-    items: [
-      { keys: ['小键盘 +'], description: '提高一档倍速' },
-      { keys: ['小键盘 -'], description: '降低一档倍速' },
-      { keys: ['小键盘 /'], description: '恢复 1x' },
-    ],
-  },
-];
-
-/* -----------------------------------------------------------------------------
- * 初始化加载动画（后台「个性化配置 → 初始化加载样式」可切换旧版/方格/魔法阵）
- *
- * 步骤按真实入口生成，不是固定四步：
- *   directplay 入口 → 直链 → 就绪（两步，不经优选）
- *   其余入口       → 搜索/详情 → 优选 → 就绪（优选会被优选开关整个跳过）
- * 「搜索」用于没带 source/id 的入口，「详情」用于带 source+id 的入口，
- * 两者是第一步的两副面孔，不是先后两步。
- *
- * 款式本身见 components/LoadingStyle。
- * -------------------------------------------------------------------------- */
-type LoadingStepKey = 'search' | 'detail' | 'direct' | 'prefer' | 'ready';
-
-const LOADING_STEP_META: Record<LoadingStepKey, LoadingStep> = {
-  search: { label: '搜索', icon: <Search /> },
-  detail: { label: '详情', icon: <FileText /> },
-  direct: { label: '直链', icon: <Link2 /> },
-  prefer: { label: '优选', icon: <Star /> },
-  ready: { label: '就绪', icon: <Play /> },
-};
-
-/* 播放器遮罩只有两步：初始化，然后播放。
- * 换源、换集对观众都只是「要播了」，用「换源」这类内部说法没人看得懂。 */
-const VIDEO_LOAD_STEPS: LoadingStep[] = [
-  { label: '初始化', icon: <Loader2 /> },
-  { label: '播放', icon: <Play /> },
-];
-
-function PlayPageClient() {
-  const LOCAL_TRANSCODER_BASE_URL = 'http://localhost:19080';
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const enableComments = useEnableComments();
-  const enableAIComments = useEnableAIComments();
-  const { addDownloadTask } = useDownload();
-  const { siteName } = useSite();
-
-  // 获取 Proxy M3U8 Token
-  const proxyToken = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_PROXY_M3U8_TOKEN || '' : '';
-
-  // 获取用户认证信息
-  const authInfo = typeof window !== 'undefined' ? getAuthInfoFromBrowserCookie() : null;
-
-  // 离线下载功能配置
-  const enableOfflineDownload = typeof window !== 'undefined'
-    ? (window as any).RUNTIME_CONFIG?.ENABLE_OFFLINE_DOWNLOAD || false
-    : false;
-  const hasOfflinePermission = authInfo?.role === 'owner' || authInfo?.role === 'admin';
-
-  // -----------------------------------------------------------------------------
-  // 状态变量（State）
-  // -----------------------------------------------------------------------------
-  const [loading, setLoading] = useState(true);
-  // 初始阶段/文案按入口定：带 source+id 是「获取详情」，directplay 是「准备直链」，
-  // 都不该在首帧闪一下「搜索」（详见 initAll 里对应的赋值点）。
-  const [loadingStage, setLoadingStage] = useState<
-    'searching' | 'preferring' | 'fetching' | 'ready'
-  >(() =>
-    searchParams.get('source') && searchParams.get('id')
-      ? 'fetching'
-      : 'searching'
-  );
-  const [loadingMessage, setLoadingMessage] = useState(() =>
-    searchParams.get('source') === 'directplay'
-      ? '🎬 正在准备直链播放...'
-      : searchParams.get('source') && searchParams.get('id')
-        ? '🎬 正在获取视频详情...'
-        : '🔍 正在搜索播放源...'
-  );
-  const [error, setError] = useState<string | null>(null);
-  const [detail, setDetail] = useState<SearchResult | null>(null);
-
-  // TMDB背景图
-  const [tmdbBackdrop, setTmdbBackdrop] = useState<string | null>(null);
-  // TMDB 分集名称（按 episode_number-1 索引），复用背景请求解析出的 tmdbId 获取
-  const [tmdbEpisodeNames, setTmdbEpisodeNames] = useState<string[]>([]);
-  // 背景请求解析出的 tmdbId 字符串（形如 "tv:123"），供拉取分集名复用
-  const [resolvedTmdbIdStr, setResolvedTmdbIdStr] = useState<string | null>(
-    null
-  );
-  // 已发起 TMDB 分集名请求的 id，避免重复拉取
-  const tmdbEpisodesFetchedIdRef = useRef<string | null>(null);
-  // 「禁用集数标题获取并切换」全局开关（本地设置，进入播放页时读取一次）
-  const [globalTitleFetchDisabled] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('disableEpisodeTitleFetch') === 'true';
-  });
-  // 「手动矫正标题」按剧集配置：随当前标题 / 用户矫正而更新
-  const [titleCorrection, setTitleCorrection] = useState<EpisodeTitleCorrection>(
-    {}
-  );
-
-  // 收藏状态
-  const [favorited, setFavorited] = useState(false);
-
-  // 网盘搜索弹窗状态
-  const [showPansouDialog, setShowPansouDialog] = useState(false);
-  const [netdiskSearchEnabled, setNetdiskSearchEnabled] = useState(false);
-
-  // AI问片状态
-  const [showAIChat, setShowAIChat] = useState(false);
+    return (
+      <PageLayout activePath='/play' hideNavigation={isWebFullscreen}>
+        <div className='mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-4 py-8'>
+          <div className='w-full rounded-2xl border border-gray-200 bg-white/85 p-6 text-center shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80'>
+            <h2 className='mb-3 text-xl font-semibold text-gray-900 dark:text-white'>
+              播放页正在维护
+            </h2>
+            <p className='mb-6 text-sm text-gray-600 dark:text-gray-300'>
+              当前正在修复 Cloudflare 构建兼容问题，请稍后重试。
+            </p>
+            <div className='flex flex-col gap-3 sm:flex-row sm:justify-center'>
+              <button
+                onClick={() => window.location.reload()}
+                className='inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-white'
+              >
+                <RefreshCw className='h-4 w-4' />
+                刷新
+              </button>
+              <button
+                onClick={() => router.back()}
+                className='inline-flex items-center justify-center gap-2 rounded-xl bg-gray-100 px-5 py-2.5 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+              >
+                <ArrowLeft className='h-4 w-4' />
+                返回
+              </button>
+            </div>
+          </div>
+        </div>
+      </PageLayout>
+    );
   const [aiEnabled, setAiEnabled] = useState(false);
   const [aiDefaultMessageWithVideo, setAiDefaultMessageWithVideo] = useState('');
 
