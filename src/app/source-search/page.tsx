@@ -12,7 +12,10 @@ import {
 } from 'react';
 
 import { ApiSite } from '@/lib/config';
-import type { CategoryNode } from '@/lib/category-tree';
+import {
+  pickDefaultSelection,
+  type CategoryNode,
+} from '@/lib/category-tree';
 import { appendSpecialSourceParam } from '@/lib/special-source.client';
 import { SearchResult } from '@/lib/types';
 
