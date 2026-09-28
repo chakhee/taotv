@@ -307,6 +307,55 @@ export default function AnimeSubscriptionComponent({
     setShowAddForm(false);
   };
 
+  // 测试：按当前表单实际搜索一次，展示关键词命中与集数提取结果
+  const handleTest = async () => {
+    const keyword = formData.title.trim();
+    if (!keyword) {
+      setTestError('请先填写番剧名称');
+      return;
+    }
+    if (!formData.filterText.trim()) {
+      setTestError('请先填写过滤关键词');
+      return;
+    }
+
+    const regexError = checkEpisodeRegex(formData.episodeRegex);
+    if (regexError) {
+      setTestError(`集数正则无效: ${regexError}`);
+      return;
+    }
+
+    try {
+      setTesting(true);
+      setTestError('');
+      const response = await fetch('/api/admin/anime-subscription/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: keyword,
+          filterText: formData.filterText.trim(),
+          excludeText: '',
+          source: formData.source,
+          episodeRegex: formData.episodeRegex.trim(),
+          lastEpisode: formData.lastEpisode,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || '测试失败');
+      }
+
+      const data: EpisodeTestResult = await response.json();
+      setTestResult(data);
+    } catch (error) {
+      setTestResult(null);
+      setTestError(error instanceof Error ? error.message : '测试失败');
+    } finally {
+      setTesting(false);
+    }
+  };
+
   // 保存订阅
   const handleSave = async () => {
     if (!formData.title.trim() || !formData.filterText.trim()) {
