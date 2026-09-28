@@ -168,6 +168,21 @@ export interface AdminConfig {
     ScanInterval?: number; // 定时扫描间隔（分钟），0表示关闭，最低60分钟
     ScanMode?: 'torrent' | 'name' | 'hybrid'; // 扫描模式：torrent=种子库匹配，name=名字匹配，hybrid=混合模式（默认）
     DisableVideoPreview?: boolean; // 禁用预览视频，直接返回直连链接
+    PathMeta?:
+      | Array<{
+          path?: string;
+          refresh14m?: boolean;
+          proxyPlay?: boolean;
+          proxyCacheMinutes?: number;
+        }>
+      | Record<
+          string,
+          {
+            refresh14m?: boolean;
+            proxyPlay?: boolean;
+            proxyCacheMinutes?: number;
+          }
+        >;
   };
   NetDiskConfig?: {
     Quark?: {
