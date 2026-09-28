@@ -377,8 +377,10 @@ interface SiteConfig {
   BangumiApiBaseUrl?: string;
   BangumiImageBaseUrl?: string;
   BangumiProxy?: string;
+  LiveChartProxy?: string;
   BannerDataSource?: string;
   RecommendationDataSource?: string;
+  LocalSettingsSyncMode?: 'off' | 'manual' | 'auto';
   PansouApiUrl?: string;
   PansouUsername?: string;
   PansouPassword?: string;
@@ -9330,6 +9332,8 @@ const ThemeConfigComponent = ({
     progressThumbType: 'default' as 'default' | 'preset' | 'custom',
     progressThumbPresetId: '',
     progressThumbCustomUrl: '',
+    loadingStyle: 'talisman' as 'classic' | 'grid' | 'talisman',
+    rateBadgeStyle: 'flag' as 'default' | 'flag' | 'medal',
   });
   const [loginBackgroundImages, setLoginBackgroundImages] = useState<string[]>([
     '',
@@ -9352,6 +9356,8 @@ const ThemeConfigComponent = ({
         progressThumbType: config.ThemeConfig.progressThumbType || 'default',
         progressThumbPresetId: config.ThemeConfig.progressThumbPresetId || '',
         progressThumbCustomUrl: config.ThemeConfig.progressThumbCustomUrl || '',
+        loadingStyle: config.ThemeConfig.loadingStyle || 'talisman',
+        rateBadgeStyle: config.ThemeConfig.rateBadgeStyle || 'flag',
       });
 
       // 解析背景图配置
@@ -10102,6 +10108,248 @@ const ThemeConfigComponent = ({
         )}
       </div>
 
+      {/* 初始化加载样式配置 */}
+      <div className='bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700'>
+        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2'>
+          <Video className='w-5 h-5' />
+          初始化加载样式
+        </h3>
+        <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>
+          播放页、直播页首屏加载动画的款式。颜色跟随站点主题色，保存后刷新页面生效
+        </p>
+
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+          {(
+            [
+              {
+                id: 'talisman',
+                name: '魔法阵',
+                desc: '默认',
+                preview: (
+                  <svg
+                    viewBox='0 0 100 100'
+                    className='w-12 h-12 text-green-500'
+                    fill='none'
+                    stroke='currentColor'
+                  >
+                    <circle cx='50' cy='50' r='46' strokeWidth='2' />
+                    <circle
+                      cx='50'
+                      cy='50'
+                      r='34'
+                      strokeWidth='1.5'
+                      strokeDasharray='4 4'
+                    />
+                    <polygon points='50,10 85,70 15,70' strokeWidth='2' />
+                    <polygon points='50,90 15,30 85,30' strokeWidth='2' />
+                    <circle cx='50' cy='50' r='6' fill='currentColor' />
+                  </svg>
+                ),
+              },
+              {
+                id: 'grid',
+                name: '方格',
+                desc: '',
+                preview: (
+                  <div className='grid grid-cols-2 gap-1 w-12 h-12'>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-sm ${
+                          i < 2
+                            ? 'bg-green-500'
+                            : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                id: 'classic',
+                name: '旧版',
+                desc: '',
+                preview: <span className='text-4xl leading-none'>📺</span>,
+              },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type='button'
+              onClick={() =>
+                setThemeSettings((prev) => ({ ...prev, loadingStyle: opt.id }))
+              }
+              className={`relative p-4 border-2 rounded-lg transition-all ${
+                themeSettings.loadingStyle === opt.id
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+              }`}
+            >
+              <div className='flex flex-col items-center gap-2'>
+                <div className='w-12 h-12 flex items-center justify-center'>
+                  {opt.preview}
+                </div>
+                <span className='text-sm font-medium text-gray-700 dark:text-gray-300 text-center'>
+                  {opt.name}
+                  {opt.desc ? `（${opt.desc}）` : ''}
+                </span>
+              </div>
+              {themeSettings.loadingStyle === opt.id && (
+                <div className='absolute top-2 right-2'>
+                  <Check className='w-5 h-5 text-blue-600 dark:text-blue-400' />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 评分星标样式配置 */}
+      <div className='bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700'>
+        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2'>
+          <Video className='w-5 h-5' />
+          评分星标样式
+        </h3>
+        <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>
+          视频卡片右上角评分徽章的款式
+        </p>
+
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+          {(
+            [
+              {
+                id: 'default',
+                name: '圆点',
+                desc: '',
+                preview: (
+                  <div className='w-9 h-9 rounded-full bg-pink-500 text-white text-xs font-bold flex items-center justify-center shadow-md'>
+                    8.5
+                  </div>
+                ),
+              },
+              {
+                id: 'flag',
+                name: '锦旗',
+                desc: '默认',
+                preview: (
+                  <div
+                    className='w-8 flex flex-col items-center pt-1 pb-2 text-[#4a2600] font-extrabold text-sm'
+                    style={{
+                      background:
+                        'linear-gradient(180deg,#ffd54a,#ff8a3d)',
+                      clipPath:
+                        'polygon(0 0,100% 0,100% 100%,50% 84%,0 100%)',
+                    }}
+                  >
+                    <span className='flex gap-[1px] mb-[1px]'>
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <svg
+                          key={i}
+                          viewBox='0 0 24 24'
+                          className='w-2 h-2'
+                          fill='#4a2600'
+                        >
+                          <path d='M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z' />
+                        </svg>
+                      ))}
+                    </span>
+                    8.5
+                  </div>
+                ),
+              },
+              {
+                id: 'medal',
+                name: '勋章',
+                desc: '',
+                preview: (
+                  <div className='flex flex-col items-center'>
+                    <div className='relative w-6 h-4 -mb-2'>
+                      <i
+                        className='absolute left-0 top-0 w-2.5 h-4 -rotate-6 bg-[#ff8a3d] block'
+                        style={{
+                          clipPath:
+                            'polygon(0 0,100% 0,100% 100%,50% 72%,0 100%)',
+                        }}
+                      />
+                      <i
+                        className='absolute right-0 top-0 w-2.5 h-4 rotate-6 bg-[#ff8a3d] block'
+                        style={{
+                          clipPath:
+                            'polygon(0 0,100% 0,100% 100%,50% 72%,0 100%)',
+                        }}
+                      />
+                    </div>
+                    <div
+                      className='relative z-10 w-8 h-8 rounded-full flex flex-col items-center justify-center text-[#4a2600] font-extrabold text-[11px] leading-none border-2 border-white/70'
+                      style={{
+                        background:
+                          'linear-gradient(135deg,#ffd54a,#ff8a3d)',
+                      }}
+                    >
+                      <span className='flex flex-col items-center -mb-[1px]'>
+                        <span className='flex'>
+                          <svg
+                            viewBox='0 0 24 24'
+                            className='w-1.5 h-1.5'
+                            fill='#4a2600'
+                          >
+                            <path d='M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z' />
+                          </svg>
+                        </span>
+                        <span className='flex gap-[1px]'>
+                          {Array.from({ length: 2 }).map((_, i) => (
+                            <svg
+                              key={i}
+                              viewBox='0 0 24 24'
+                              className='w-1.5 h-1.5'
+                              fill='#4a2600'
+                            >
+                              <path d='M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z' />
+                            </svg>
+                          ))}
+                        </span>
+                      </span>
+                      8.5
+                    </div>
+                  </div>
+                ),
+              },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type='button'
+              onClick={() =>
+                setThemeSettings((prev) => ({
+                  ...prev,
+                  rateBadgeStyle: opt.id,
+                }))
+              }
+              className={`relative p-4 border-2 rounded-lg transition-all ${
+                themeSettings.rateBadgeStyle === opt.id
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+              }`}
+            >
+              <div className='flex flex-col items-center gap-2'>
+                <div className='w-12 h-12 flex items-center justify-center'>
+                  {opt.preview}
+                </div>
+                <span className='text-sm font-medium text-gray-700 dark:text-gray-300 text-center'>
+                  {opt.name}
+                  {opt.desc ? `（${opt.desc}）` : ''}
+                </span>
+              </div>
+              {themeSettings.rateBadgeStyle === opt.id && (
+                <div className='absolute top-2 right-2'>
+                  <Check className='w-5 h-5 text-blue-600 dark:text-blue-400' />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 保存按钮 */}
       <div className='flex justify-end'>
         <button
@@ -10167,12 +10415,15 @@ const SiteConfigComponent = ({
     TMDBApiKey: '',
     TMDBProxy: '',
     TMDBReverseProxy: '',
+    TMDBImageBaseUrl: 'https://image.tmdb.org',
     BangumiDataSource: 'direct',
     BangumiApiBaseUrl: 'https://api.bgm.tv',
     BangumiImageBaseUrl: '',
     BangumiProxy: '',
+    LiveChartProxy: '',
     BannerDataSource: 'Douban',
     RecommendationDataSource: 'Mixed',
+    LocalSettingsSyncMode: 'off',
     PansouApiUrl: '',
     PansouUsername: '',
     PansouPassword: '',
@@ -10225,7 +10476,6 @@ const SiteConfigComponent = ({
       label: '豆瓣 CDN By CMLiussss（腾讯云）',
     },
     { value: 'cmliussss-cdn-ali', label: '豆瓣 CDN By CMLiussss（阿里云）' },
-    { value: 'baidu', label: '百度图片代理' },
     { value: 'custom', label: '自定义代理' },
     {
       value: 'direct',
@@ -10286,14 +10536,18 @@ const SiteConfigComponent = ({
         TMDBApiKey: config.SiteConfig.TMDBApiKey || '',
         TMDBProxy: config.SiteConfig.TMDBProxy || '',
         TMDBReverseProxy: config.SiteConfig.TMDBReverseProxy || '',
+        TMDBImageBaseUrl:
+          config.SiteConfig.TMDBImageBaseUrl || 'https://image.tmdb.org',
         BangumiDataSource: config.SiteConfig.BangumiDataSource || 'direct',
         BangumiApiBaseUrl:
           config.SiteConfig.BangumiApiBaseUrl || 'https://api.bgm.tv',
         BangumiImageBaseUrl: config.SiteConfig.BangumiImageBaseUrl || '',
         BangumiProxy: config.SiteConfig.BangumiProxy || '',
+        LiveChartProxy: config.SiteConfig.LiveChartProxy || '',
         BannerDataSource: config.SiteConfig.BannerDataSource || 'Douban',
         RecommendationDataSource:
           config.SiteConfig.RecommendationDataSource || 'Mixed',
+        LocalSettingsSyncMode: config.SiteConfig.LocalSettingsSyncMode || 'off',
         PansouApiUrl: config.SiteConfig.PansouApiUrl || '',
         PansouUsername: config.SiteConfig.PansouUsername || '',
         PansouPassword: config.SiteConfig.PansouPassword || '',
@@ -10839,6 +11093,37 @@ const SiteConfigComponent = ({
         </p>
       </div>
 
+      {/* 本地设置云同步模式 */}
+      <div>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+          本地设置云同步
+        </label>
+        <select
+          value={siteSettings.LocalSettingsSyncMode || 'off'}
+          onChange={(e) =>
+            setSiteSettings((prev) => ({
+              ...prev,
+              LocalSettingsSyncMode: e.target.value as
+                | 'off'
+                | 'manual'
+                | 'auto',
+            }))
+          }
+          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+        >
+          <option value='off'>关闭</option>
+          <option value='manual'>手动模式</option>
+          <option value='auto'>自动模式</option>
+        </select>
+        <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+          登录用户可把本地设置同步到云端，多设备保持一致。
+          <br />
+          手动模式：本地设置面板右上角出现「备份/恢复」按钮。
+          <br />
+          自动模式：进入网站自动拉取云端副本，打开本地设置面板时后台静默同步。
+        </p>
+      </div>
+
       <details className='pt-4 border-t border-gray-200 dark:border-gray-700'>
         <summary className='text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer'>
           数据源配置
@@ -11112,6 +11397,29 @@ const SiteConfigComponent = ({
               配置 TMDB 反向代理 Base URL（可选）
             </p>
           </div>
+
+          {/* TMDB Image Base URL */}
+          <div>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              TMDB 图片默认地址
+            </label>
+            <input
+              type='text'
+              placeholder='https://image.tmdb.org'
+              value={siteSettings.TMDBImageBaseUrl}
+              onChange={(e) =>
+                setSiteSettings((prev) => ({
+                  ...prev,
+                  TMDBImageBaseUrl: e.target.value,
+                }))
+              }
+              className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+            />
+            <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+              用户未在本地数据源设置中配置 TMDB 图片地址时，图片默认使用该地址（默认
+              https://image.tmdb.org）
+            </p>
+          </div>
         </div>
       </details>
 
@@ -11226,6 +11534,27 @@ const SiteConfigComponent = ({
             <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
               用于服务器代理访问 Bangumi API。Cloudflare
               部署环境下不会使用该代理。
+            </p>
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              LiveChart 系统代理
+            </label>
+            <input
+              type='text'
+              placeholder='例如: http://127.0.0.1:7890'
+              value={siteSettings.LiveChartProxy || ''}
+              onChange={(e) =>
+                setSiteSettings((prev) => ({
+                  ...prev,
+                  LiveChartProxy: e.target.value,
+                }))
+              }
+              className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+            />
+            <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+              用于服务器代理访问 LiveChart 番剧时刻表。留空则直连。
             </p>
           </div>
 
@@ -15118,11 +15447,27 @@ const AIConfigComponent = ({
   // 联网搜索配置
   const [enableWebSearch, setEnableWebSearch] = useState(false);
   const [webSearchProvider, setWebSearchProvider] = useState<
-    'tavily' | 'serper' | 'serpapi'
+    'tavily' | 'serper' | 'serpapi' | 'bing'
   >('tavily');
   const [tavilyApiKey, setTavilyApiKey] = useState('');
   const [serperApiKey, setSerperApiKey] = useState('');
   const [serpApiKey, setSerpApiKey] = useState('');
+
+  // 新版工具式调用配置
+  const [enableNewMode, setEnableNewMode] = useState(true);
+  const [newProtocol, setNewProtocol] = useState<
+    'openai-completions' | 'openai-responses' | 'claude'
+  >('openai-completions');
+  const [openaiApiKey, setOpenaiApiKey] = useState('');
+  const [openaiBaseURL, setOpenaiBaseURL] = useState('');
+  const [openaiModel, setOpenaiModel] = useState('');
+  const [claudeApiKey, setClaudeApiKey] = useState('');
+  const [claudeBaseURL, setClaudeBaseURL] = useState('');
+  const [claudeModel, setClaudeModel] = useState('');
+
+  // 新版上下文压缩配置
+  const [maxContext, setMaxContext] = useState(131072);
+  const [compressThreshold, setCompressThreshold] = useState(90);
 
   // 功能开关
   const [enableHomepageEntry, setEnableHomepageEntry] = useState(true);
@@ -15153,6 +15498,16 @@ const AIConfigComponent = ({
       setTavilyApiKey(config.AIConfig.TavilyApiKey || '');
       setSerperApiKey(config.AIConfig.SerperApiKey || '');
       setSerpApiKey(config.AIConfig.SerpApiKey || '');
+      setEnableNewMode(config.AIConfig.EnableNewMode ?? true);
+      setNewProtocol(config.AIConfig.NewProtocol || 'openai-completions');
+      setOpenaiApiKey(config.AIConfig.OpenAIApiKey || '');
+      setOpenaiBaseURL(config.AIConfig.OpenAIBaseURL || '');
+      setOpenaiModel(config.AIConfig.OpenAIModel || '');
+      setClaudeApiKey(config.AIConfig.ClaudeApiKey || '');
+      setClaudeBaseURL(config.AIConfig.ClaudeBaseURL || '');
+      setClaudeModel(config.AIConfig.ClaudeModel || '');
+      setMaxContext(config.AIConfig.MaxContext ?? 131072);
+      setCompressThreshold(config.AIConfig.CompressThreshold ?? 90);
       setEnableHomepageEntry(config.AIConfig.EnableHomepageEntry !== false);
       setEnableVideoCardEntry(config.AIConfig.EnableVideoCardEntry !== false);
       setEnablePlayPageEntry(config.AIConfig.EnablePlayPageEntry !== false);
@@ -15186,6 +15541,16 @@ const AIConfigComponent = ({
             TavilyApiKey: tavilyApiKey,
             SerperApiKey: serperApiKey,
             SerpApiKey: serpApiKey,
+            EnableNewMode: enableNewMode,
+            NewProtocol: newProtocol,
+            MaxContext: maxContext,
+            CompressThreshold: compressThreshold,
+            OpenAIApiKey: openaiApiKey,
+            OpenAIBaseURL: openaiBaseURL,
+            OpenAIModel: openaiModel,
+            ClaudeApiKey: claudeApiKey,
+            ClaudeBaseURL: claudeBaseURL,
+            ClaudeModel: claudeModel,
             EnableHomepageEntry: enableHomepageEntry,
             EnableVideoCardEntry: enableVideoCardEntry,
             EnablePlayPageEntry: enablePlayPageEntry,
@@ -15268,7 +15633,59 @@ const AIConfigComponent = ({
         </label>
       </div>
 
-      {/* AI模型配置 */}
+      {/* 调用模式切换（旧版/新版卡片） */}
+      <div className='space-y-4'>
+        <h3 className='text-base font-semibold text-gray-900 dark:text-gray-100'>
+          调用模式
+        </h3>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+          {/* 旧版卡片 */}
+          <button
+            type='button'
+            onClick={() => setEnableNewMode(false)}
+            className={`p-4 rounded-lg border-2 text-left transition-colors ${
+              !enableNewMode
+                ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10'
+                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          >
+            <div className='flex items-center justify-between'>
+              <span className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
+                旧版
+              </span>
+              {!enableNewMode && <Check className='w-5 h-5 text-green-600' />}
+            </div>
+            <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+              预先分析意图并抓取 联网搜索/豆瓣/TMDB 数据后回答
+            </p>
+          </button>
+
+          {/* 新版卡片 */}
+          <button
+            type='button'
+            onClick={() => setEnableNewMode(true)}
+            className={`p-4 rounded-lg border-2 text-left transition-colors ${
+              enableNewMode
+                ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10'
+                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          >
+            <div className='flex items-center justify-between'>
+              <span className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
+                新版（工具式调用）
+              </span>
+              {enableNewMode && <Check className='w-5 h-5 text-green-600' />}
+            </div>
+            <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+              由模型自主决定是否调用相关工具
+            </p>
+          </button>
+        </div>
+      </div>
+
+      {/* 旧版 AI模型配置（仅旧版显示） */}
+      {!enableNewMode && (
+        <>
       <div className='space-y-4'>
         <h3 className='text-base font-semibold text-gray-900 dark:text-gray-100'>
           AI模型配置
@@ -15319,7 +15736,7 @@ const AIConfigComponent = ({
         </div>
       </div>
 
-      {/* 决策模型配置 */}
+      {/* 旧版 决策模型配置（仅旧版显示） */}
       <div className='space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg'>
         <div>
           <h4 className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
@@ -15356,6 +15773,162 @@ const AIConfigComponent = ({
           </p>
         </div>
       </div>
+      </>
+      )}
+
+      {/* 新版 调用配置（仅新版显示） */}
+      {enableNewMode && (
+      <div className='space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg'>
+        <div>
+          <h4 className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
+            新版调用配置
+          </h4>
+          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+            由模型自主决定是否调用相关工具
+          </p>
+        </div>
+
+        <div>
+          <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+            调用协议
+          </label>
+          <select
+            value={newProtocol}
+            onChange={(e) => setNewProtocol(e.target.value as any)}
+            className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+          >
+            <option value='openai-completions'>OpenAI 普通协议 (chat/completions)</option>
+            <option value='openai-responses'>OpenAI Response 协议 (/responses)</option>
+            <option value='claude'>Claude Messages 协议 (/v1/messages)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+            最大上下文Token数
+          </label>
+          <input
+            type='number'
+            min='1024'
+            step='1024'
+            value={maxContext}
+            onChange={(e) => setMaxContext(parseInt(e.target.value) || 131072)}
+            className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+          />
+          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+            上下文窗口 token 上限，默认 131072（128k）
+          </p>
+        </div>
+
+        <div>
+          <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+            上下文压缩触发阈值 (%)
+          </label>
+          <input
+            type='number'
+            min='0'
+            max='100'
+            step='1'
+            value={compressThreshold}
+            onChange={(e) => setCompressThreshold(parseInt(e.target.value) || 0)}
+            className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+          />
+          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+            超出后调用 LLM 将较早的工具调用摘要化并丢弃工具消息；0=关闭压缩
+          </p>
+        </div>
+
+        {(newProtocol === 'openai-completions' || newProtocol === 'openai-responses') && (
+          <div className='space-y-3 p-3 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg'>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                OpenAI API Key
+              </label>
+              <input
+                type='password'
+                value={openaiApiKey}
+                onChange={(e) => setOpenaiApiKey(e.target.value)}
+                placeholder='sk-...'
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                OpenAI Base URL
+              </label>
+              <input
+                type='text'
+                value={openaiBaseURL}
+                onChange={(e) => setOpenaiBaseURL(e.target.value)}
+                placeholder='https://api.openai.com'
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                OpenAI 模型
+              </label>
+              <input
+                type='text'
+                value={openaiModel}
+                onChange={(e) => setOpenaiModel(e.target.value)}
+                placeholder='gpt-4o-mini'
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+          </div>
+        )}
+
+        {newProtocol === 'claude' && (
+          <div className='space-y-3 p-3 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg'>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                Claude API Key
+              </label>
+              <input
+                type='password'
+                value={claudeApiKey}
+                onChange={(e) => setClaudeApiKey(e.target.value)}
+                placeholder='sk-ant-...'
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                Claude Base URL
+              </label>
+              <input
+                type='text'
+                value={claudeBaseURL}
+                onChange={(e) => setClaudeBaseURL(e.target.value)}
+                placeholder='https://api.anthropic.com'
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                Claude 模型
+              </label>
+              <input
+                type='text'
+                value={claudeModel}
+                onChange={(e) => setClaudeModel(e.target.value)}
+                placeholder='claude-sonnet-4-6'
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+          </div>
+        )}
+
+        <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3'>
+          <p className='text-xs text-blue-700 dark:text-blue-400'>
+            💡 <strong>提示:</strong> 由模型自主决定是否调用相关工具。
+            需在站点设置中配置 TMDB API Key（TMDB 工具）、
+            在下方「启用联网搜索」中配置对应搜索服务 API Key（联网搜索工具）。豆瓣工具始终可用。
+          </p>
+        </div>
+      </div>
+      )}
 
       {/* 联网搜索配置 */}
       <div className='space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg'>
@@ -15393,6 +15966,7 @@ const AIConfigComponent = ({
                 <option value='tavily'>Tavily (推荐)</option>
                 <option value='serper'>Serper.dev</option>
                 <option value='serpapi'>SerpAPI</option>
+                <option value='bing'>Bing RSS（免费，无需 API Key）</option>
               </select>
             </div>
 
@@ -17274,6 +17848,18 @@ function AdminPageClient() {
     telegramConfig: false,
   });
 
+  // PC 左右布局：当前选中的区块（单选），持久化以便保存刷新后仍停留在原区块
+  const [activeKey, setActiveKey] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'siteConfig';
+    return localStorage.getItem('admin_active_section') || 'siteConfig';
+  });
+  // PC 内容区滚动容器，切换区块时回到顶部
+  const contentScrollRef = useRef<HTMLDivElement | null>(null);
+  // PC 侧边栏中分组的展开状态
+  const [expandedGroups, setExpandedGroups] = useState<{
+    [key: string]: boolean;
+  }>({ mediaLibrary: true });
+
   // 获取管理员配置
   // showLoading 用于控制是否在请求期间显示整体加载骨架。
   const fetchConfig = useCallback(async (showLoading = false) => {
@@ -17364,8 +17950,18 @@ function AdminPageClient() {
   useEffect(() => {
     // 首次加载时显示骨架
     fetchConfig(true);
-    // 不再自动获取用户列表，等用户打开用户管理选项卡时再获取
+    // 若恢复的区块是用户管理，则补拉一次用户列表
+    if (activeKey === 'userConfig') {
+      fetchUsersV2();
+    }
+    // 仅在挂载时执行
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchConfig]);
+
+  // PC 切换区块时，内容区滚动回顶部
+  useEffect(() => {
+    contentScrollRef.current?.scrollTo({ top: 0 });
+  }, [activeKey]);
 
   // 切换标签展开状态
   const toggleTab = (tabKey: string) => {
@@ -17380,6 +17976,23 @@ function AdminPageClient() {
     if (tabKey === 'userConfig' && !wasExpanded && !usersV2) {
       fetchUsersV2();
     }
+  };
+
+  // PC 左右布局：选中某个区块
+  const selectSection = (key: string) => {
+    setActiveKey(key);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_active_section', key);
+    }
+    // 首次进入用户管理时懒加载用户列表
+    if (key === 'userConfig' && !usersV2) {
+      fetchUsersV2();
+    }
+  };
+
+  // PC 侧边栏：切换分组展开
+  const toggleGroup = (key: string) => {
+    setExpandedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   // 新增: 重置配置处理函数
@@ -17480,6 +18093,295 @@ function AdminPageClient() {
     );
   }
 
+  // 管理面板区块导航配置（PC 侧边栏与移动端手风琴共用同一份数据）
+  type AdminNavItem = {
+    key: string;
+    title: string;
+    icon: React.ReactNode;
+    ownerOnly?: boolean;
+    render?: () => React.ReactNode;
+    children?: AdminNavItem[];
+  };
+
+  const navIconClass = 'text-gray-600 dark:text-gray-400';
+  const navItems: AdminNavItem[] = [
+    {
+      key: 'configFile',
+      title: '配置文件',
+      ownerOnly: true,
+      icon: <FileText size={20} className={navIconClass} />,
+      render: () => (
+        <ConfigFileComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'siteConfig',
+      title: '站点配置',
+      icon: <Settings size={20} className={navIconClass} />,
+      render: () => (
+        <SiteConfigComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'registrationConfig',
+      title: '注册配置',
+      icon: <UserPlus size={20} className={navIconClass} />,
+      render: () => (
+        <RegistrationConfigComponent
+          config={config}
+          refreshConfig={fetchConfig}
+        />
+      ),
+    },
+    {
+      key: 'themeConfig',
+      title: '个性化配置',
+      icon: <Palette size={20} className={navIconClass} />,
+      render: () => (
+        <ThemeConfigComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'userConfig',
+      title: '用户管理',
+      icon: <Users size={20} className={navIconClass} />,
+      render: () => (
+        <UserConfig
+          config={config}
+          role={role}
+          refreshConfig={refreshConfigAndUsers}
+          usersV2={usersV2}
+          userPage={userPage}
+          userTotalPages={userTotalPages}
+          userTotal={userTotal}
+          fetchUsersV2={fetchUsersV2}
+          userListLoading={userListLoading}
+          userSearch={userSearch}
+          setUserSearch={setUserSearch}
+        />
+      ),
+    },
+    {
+      key: 'videoSource',
+      title: '视频源配置',
+      icon: <Video size={20} className={navIconClass} />,
+      render: () => (
+        <VideoSourceConfig config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'sourceScriptLab',
+      title: '视频源脚本',
+      icon: <Bot size={20} className={navIconClass} />,
+      render: () => <VideoSourceScriptLab />,
+    },
+    {
+      key: 'musicConfig',
+      title: '音乐配置',
+      icon: (
+        <svg
+          width='20'
+          height='20'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          strokeWidth='2'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          className={navIconClass}
+        >
+          <path d='M9 18V5l12-2v13' />
+          <circle cx='6' cy='18' r='3' />
+          <circle cx='18' cy='16' r='3' />
+        </svg>
+      ),
+      render: () => (
+        <MusicConfigComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'suwayomiConfig',
+      title: '漫画配置',
+      icon: <BookOpen size={20} className={navIconClass} />,
+      render: () => (
+        <SuwayomiConfigComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'opdsConfig',
+      title: '电子书配置',
+      icon: <BookMarked size={20} className={navIconClass} />,
+      render: () => (
+        <OPDSConfigComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'liveSource',
+      title: '电视直播源配置',
+      icon: <Tv size={20} className={navIconClass} />,
+      render: () => (
+        <LiveSourceConfig config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'webLive',
+      title: '网络直播配置',
+      icon: <Globe size={20} className={navIconClass} />,
+      render: () => (
+        <WebLiveConfig config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'mediaLibrary',
+      title: '私人影库',
+      icon: (
+        <Database size={20} className='text-yellow-700 dark:text-yellow-400' />
+      ),
+      children: [
+        {
+          key: 'openListConfig',
+          title: 'Openlist配置',
+          icon: <FolderOpen size={20} className={navIconClass} />,
+          render: () => (
+            <OpenListConfigComponent
+              config={config}
+              refreshConfig={fetchConfig}
+            />
+          ),
+        },
+        {
+          key: 'embyConfig',
+          title: 'Emby 媒体库',
+          icon: <FolderOpen size={20} className={navIconClass} />,
+          render: () => (
+            <EmbyConfigComponent config={config} refreshConfig={fetchConfig} />
+          ),
+        },
+        {
+          key: 'xiaoyaConfig',
+          title: '小雅配置',
+          icon: <FolderOpen size={20} className={navIconClass} />,
+          render: () => (
+            <XiaoyaConfigComponent
+              config={config}
+              refreshConfig={fetchConfig}
+            />
+          ),
+        },
+        {
+          key: 'movieRequests',
+          title: '求片管理',
+          icon: <Video size={20} className={navIconClass} />,
+          render: () => (
+            <MovieRequestsComponent
+              config={config}
+              refreshConfig={fetchConfig}
+            />
+          ),
+        },
+        {
+          key: 'animeSubscription',
+          title: '追番订阅',
+          icon: <Cat size={20} className={navIconClass} />,
+          render: () => (
+            <AnimeSubscriptionComponent
+              config={config}
+              refreshConfig={fetchConfig}
+            />
+          ),
+        },
+        {
+          key: 'netDiskConfig',
+          title: '网盘配置',
+          icon: <Cloud size={20} className={navIconClass} />,
+          render: () => (
+            <NetDiskConfigComponent
+              config={config}
+              refreshConfig={fetchConfig}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      key: 'aiConfig',
+      title: 'AI设定',
+      icon: <Bot size={20} className={navIconClass} />,
+      render: () => (
+        <AIConfigComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'emailConfig',
+      title: '邮件配置',
+      icon: <Mail size={20} className={navIconClass} />,
+      render: () => (
+        <EmailConfigComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'telegramConfig',
+      title: 'Telegram Bot',
+      icon: <Send size={20} className={navIconClass} />,
+      render: () => (
+        <TelegramConfigComponent config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'categoryConfig',
+      title: '分类配置',
+      icon: <FolderOpen size={20} className={navIconClass} />,
+      render: () => (
+        <CategoryConfig config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'customAdFilter',
+      title: '自定义去广告',
+      icon: (
+        <svg
+          width='20'
+          height='20'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          strokeWidth='2'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          className={navIconClass}
+        >
+          <path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z' />
+          <path d='M8 12h8' />
+        </svg>
+      ),
+      render: () => (
+        <CustomAdFilterConfig config={config} refreshConfig={fetchConfig} />
+      ),
+    },
+    {
+      key: 'dataMigration',
+      title: '数据迁移',
+      ownerOnly: true,
+      icon: <Database size={20} className={navIconClass} />,
+      render: () => <DataMigration onRefreshConfig={refreshConfigAndUsers} />,
+    },
+  ];
+
+  // 根据 key 查找区块（含分组子项）
+  const findNavItem = (key: string): AdminNavItem | undefined => {
+    for (const it of navItems) {
+      if (it.key === key) return it;
+      const child = it.children?.find((c) => c.key === key);
+      if (child) return child;
+    }
+    return undefined;
+  };
+
+  const visibleNavItems = navItems.filter(
+    (it) => !it.ownerOnly || role === 'owner'
+  );
+  const activeItem = findNavItem(activeKey);
+
   return (
     <PageLayout activePath='/admin'>
       <div className='px-2 sm:px-10 py-4 sm:py-8'>
@@ -17559,6 +18461,76 @@ function AdminPageClient() {
             </div>
           )}
 
+          {/* PC：左右结构（侧边栏 + 内容区），两栏各自独立滚动 */}
+          <div className='hidden lg:flex gap-6 lg:h-[calc(100vh-7rem)]'>
+            {/* 侧边栏 */}
+            <nav className='w-56 shrink-0 h-full overflow-y-auto pr-1'>
+              <div className='space-y-1'>
+                {visibleNavItems.map((item) =>
+                  item.children ? (
+                    <div key={item.key}>
+                      <button
+                        onClick={() => toggleGroup(item.key)}
+                        className='w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
+                      >
+                        <span className='flex items-center gap-2 min-w-0'>
+                          {item.icon}
+                          <span className='truncate'>{item.title}</span>
+                        </span>
+                        {expandedGroups[item.key] ? (
+                          <ChevronUp size={16} />
+                        ) : (
+                          <ChevronDown size={16} />
+                        )}
+                      </button>
+                      {expandedGroups[item.key] && (
+                        <div className='mt-1 ml-3 pl-3 border-l border-gray-200 dark:border-gray-700 space-y-1'>
+                          {item.children.map((child) => (
+                            <button
+                              key={child.key}
+                              onClick={() => selectSection(child.key)}
+                              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                                activeKey === child.key
+                                  ? 'bg-green-500/10 text-green-600 dark:text-green-400 font-medium'
+                                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                              }`}
+                            >
+                              {child.icon}
+                              <span className='truncate'>{child.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      key={item.key}
+                      onClick={() => selectSection(item.key)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        activeKey === item.key
+                          ? 'bg-green-500/10 text-green-600 dark:text-green-400 font-medium'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {item.icon}
+                      <span className='truncate'>{item.title}</span>
+                    </button>
+                  )
+                )}
+              </div>
+            </nav>
+
+            {/* 内容区（独立滚动） */}
+            <div
+              ref={contentScrollRef}
+              className='flex-1 min-w-0 h-full overflow-y-auto pr-1'
+            >
+              {activeItem?.render?.()}
+            </div>
+          </div>
+
+          {/* 移动端 / 窄屏：保留原有手风琴 */}
+          <div className='lg:hidden'>
           {/* 配置文件标签 - 仅站长可见 */}
           {role === 'owner' && (
             <CollapsibleTab
@@ -17981,6 +18953,7 @@ function AdminPageClient() {
                 <DataMigration onRefreshConfig={refreshConfigAndUsers} />
               </CollapsibleTab>
             )}
+          </div>
           </div>
         </div>
       </div>

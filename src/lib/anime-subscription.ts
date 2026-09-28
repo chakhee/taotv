@@ -32,7 +32,50 @@ function getAnimeSubscriptionDownloadTool(tool: unknown): AnimeSubscriptionDownl
 /**
  * 从标题中提取集数
  */
-export function extractEpisode(title: string): number | null {
+export function validateEpisodeRegex(regex: string): { ok: boolean; error?: string } {
+  const trimmed = regex.trim();
+  if (!trimmed) return { ok: true };
+  try {
+    // eslint-disable-next-line no-new
+    new RegExp(trimmed);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : '正则无效' };
+  }
+}
+
+/**
+ * 用自定义正则从标题中提取集数（首个捕获组；无捕获组时取整个匹配）
+ */
+export function extractEpisodeWithRegex(
+  title: string,
+  regex: string
+): number | null {
+  const trimmed = regex.trim();
+  if (!trimmed) return null;
+  let re: RegExp;
+  try {
+    re = new RegExp(trimmed);
+  } catch {
+    return null;
+  }
+  const match = title.match(re);
+  if (!match) return null;
+  const raw = match[1] ?? match[0];
+  const ep = parseInt(raw, 10);
+  if (!Number.isFinite(ep) || ep <= 0 || ep >= 1000) return null;
+  return ep;
+}
+
+/**
+ * 从标题中提取集数。
+ * episodeRegex：自定义集数正则（可选），填写后优先于内置规则（不匹配则视为无法识别）
+ */
+export function extractEpisode(title: string, episodeRegex?: string): number | null {
+  if (episodeRegex && episodeRegex.trim()) {
+    return extractEpisodeWithRegex(title, episodeRegex);
+  }
+
   const parsed = parseTorrentName(title);
 
   if (parsed.episode) {

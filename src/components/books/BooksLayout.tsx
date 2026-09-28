@@ -2,7 +2,6 @@
 
 import {
   BookOpen,
-  ChevronLeft,
   Headphones,
   History,
   Library,
@@ -10,21 +9,33 @@ import {
   MoreVertical,
   Search,
   Settings2,
-  Sparkles,
 } from 'lucide-react';
-import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { useSite } from '@/components/SiteProvider';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { cn } from '@/lib/cn';
 
-const tabs = [
+import {
+  LIBRARY_FOCUS,
+  LIBRARY_ICON_BUTTON_GHOST,
+  LIBRARY_MENU_ITEM,
+  LIBRARY_PANEL,
+} from '@/components/media/library';
+import MediaShell, { MediaShellTab } from '@/components/media/MediaShell';
+import { useSite } from '@/components/SiteProvider';
+
+const tabs: MediaShellTab[] = [
   { href: '/books', label: '发现', icon: Library },
   { href: '/books/search', label: '搜索', icon: Search },
   { href: '/books/shelf', label: '书架', icon: BookOpen },
   { href: '/books/history', label: '历史', icon: History },
 ];
+
+// 阅读页内容区样式：保持改造前的原值，仅把移动端顶栏高度对齐到外壳统一的 h-14
+// （阅读页自身按 calc(100vh-3.5rem) 计算高度，原先桌面端 h-16 会多出 0.5rem）。
+// max-w-6xl 经 cn() 覆盖外壳默认的 max-w-7xl，避免 /books/read 布局回归。
+const READER_MAIN_CLASS =
+  'max-w-6xl pt-[calc(3.5rem+env(safe-area-inset-top))] sm:pt-[calc(4rem+env(safe-area-inset-top))]';
 
 type ReadHeaderPayload = {
   title?: string;

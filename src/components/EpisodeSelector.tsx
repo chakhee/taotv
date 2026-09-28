@@ -1,7 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
 
-import { Link as LinkIcon, Settings } from 'lucide-react';
+import {
+  LayoutGrid,
+  List as ListIcon,
+  Link as LinkIcon,
+  MoreVertical,
+  Settings,
+  Wand2,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import React, {
   useCallback,
   useEffect,
@@ -10,7 +18,7 @@ import React, {
   useState,
 } from 'react';
 
-import type { DanmakuComment,DanmakuSelection } from '@/lib/danmaku/types';
+import type { DanmakuComment,DanmakuEpisode,DanmakuSelection } from '@/lib/danmaku/types';
 import { generateStorageKey, getCachedPlayRecordsSnapshot } from '@/lib/db.client';
 import { isEpisodeHiddenByFilter } from '@/lib/episode-filter';
 import { loadAllLocalEpisodeProgressRecords } from '@/lib/episode-progress';
@@ -20,7 +28,65 @@ import { getVideoResolutionFromM3u8 } from '@/lib/utils';
 
 import DanmakuPanel from '@/components/DanmakuPanel';
 import EpisodeFilterSettings from '@/components/EpisodeFilterSettings';
+import EpisodeTitleCorrectDialog from '@/components/EpisodeTitleCorrectDialog';
 import ProxyImage from '@/components/ProxyImage';
+
+interface EpisodeListItemProps {
+  episodeNumber: number;
+  isActive: boolean;
+  isWatched: boolean;
+  /** 弹幕/TMDB 提供的分集名称 */
+  name: string;
+  inactiveRowClass: string;
+  onSelect: (zeroBasedIndex: number) => void;
+}
+
+/** 单集列表行：有分集名称（弹幕/TMDB）时用列表形式展示，序号 + 名称 */
+const EpisodeListItem: React.FC<EpisodeListItemProps> = ({
+  episodeNumber,
+  isActive,
+  isWatched,
+  name,
+  inactiveRowClass,
+  onSelect,
+}) => {
+  return (
+    <button
+      type='button'
+      disabled={isActive || undefined}
+      aria-current={isActive ? 'true' : undefined}
+      onClick={() => {
+        if (!isActive) {
+          onSelect(episodeNumber - 1);
+        }
+      }}
+      title={name}
+      className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${
+        isActive
+          ? 'bg-green-500 text-white border-green-400 shadow-lg shadow-green-500/25 dark:bg-green-600 cursor-default'
+          : isWatched
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-700/60 dark:hover:bg-emerald-900/30'
+            : inactiveRowClass
+      }`.trim()}
+    >
+      <span
+        className={`flex-shrink-0 h-7 min-w-[1.75rem] px-1.5 flex items-center justify-center rounded-md text-xs font-mono font-semibold ${
+          isActive
+            ? 'bg-white/20 text-white'
+            : isWatched
+              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300'
+              : 'bg-black/5 dark:bg-white/10'
+        }`}
+      >
+        {episodeNumber}
+      </span>
+      <span className='flex-1 truncate text-sm font-medium'>{name}</span>
+      {isWatched && !isActive && (
+        <span className='flex-shrink-0 h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400' />
+      )}
+    </button>
+  );
+};
 
 // 定义视频信息类型
 interface VideoInfo {
@@ -36,6 +102,8 @@ interface EpisodeSelectorProps {
   totalEpisodes: number;
   /** 剧集标题 */
   episodes_titles: string[];
+  /** 弹幕/TMDB 提供的分集名称（按 episodeNumber-1 索引）；存在时选集以列表形式展示 */
+  richEpisodeNames?: (string | undefined)[];
   /** 每页显示多少集，默认 50 */
   episodesPerPage?: number;
   /** 当前选中的集数（1 开始） */
@@ -60,6 +128,8 @@ interface EpisodeSelectorProps {
   onDanmakuSelect?: (selection: DanmakuSelection) => void;
   currentDanmakuSelection?: DanmakuSelection | null;
   onUploadDanmaku?: (comments: DanmakuComment[]) => void;
+  /** 手动选集弹幕时回传该源的完整分集列表，供刷新分集标题 */
+  onDanmakuEpisodesLoaded?: (episodes: DanmakuEpisode[]) => void;
   /** 观影室房员状态 - 禁用选集和换源，但保留弹幕 */
   isRoomMember?: boolean;
   /** 电影播放时默认展示换源选项卡 */
@@ -78,6 +148,7 @@ interface EpisodeSelectorProps {
 const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   totalEpisodes,
   episodes_titles,
+  richEpisodeNames,
   episodesPerPage = 50,
   value = 1,
   onChange,
@@ -94,6 +165,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   onDanmakuSelect,
   currentDanmakuSelection,
   onUploadDanmaku,
+  onDanmakuEpisodesLoaded,
   isRoomMember = false,
   isMovie = false,
   useLightTextOnBackdrop = false,
@@ -120,6 +192,9 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   const inactiveEpisodeClass = useLightTextOnBackdrop
     ? 'bg-white/15 text-white border-white/10 hover:bg-white/25 hover:scale-105'
     : 'bg-gray-200 text-gray-700 border-transparent hover:bg-gray-300 hover:scale-105 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
+  const inactiveEpisodeRowClass = useLightTextOnBackdrop
+    ? 'bg-white/10 text-white border-white/10 hover:bg-white/20'
+    : 'bg-gray-100 text-gray-700 border-transparent hover:bg-gray-200 dark:bg-gray-800/60 dark:text-gray-200 dark:border-white/5 dark:hover:bg-gray-700/70';
   const sourceTitleClass = useLightTextOnBackdrop
     ? 'text-white'
     : 'text-gray-900 dark:text-gray-100';
@@ -295,6 +370,18 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
 
   // 集数过滤设置弹窗状态
   const [showFilterSettings, setShowFilterSettings] = useState<boolean>(false);
+
+  // 手动矫正标题弹窗状态（矫正配置按 videoTitle 存 localStorage，由播放页消费）
+  const [showTitleCorrect, setShowTitleCorrect] = useState<boolean>(false);
+
+  // 集数视图模式（列表/网格）与三点菜单
+  const [episodeViewMode, setEpisodeViewMode] = useState<'grid' | 'list'>(
+    'grid'
+  );
+  // 用户是否手动切过视图（切过后不再随分集名自动切换）
+  const userSetViewModeRef = useRef<boolean>(false);
+  const [showEpisodeMenu, setShowEpisodeMenu] = useState<boolean>(false);
+  const episodeMenuRef = useRef<HTMLDivElement>(null);
 
   // 读取本地"优选和测速"开关，默认开启
   const [optimizationEnabled] = useState<boolean>(() => {
@@ -707,6 +794,41 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
     episodes: [],
   };
 
+  // 弹幕/TMDB 提供了分集名称时，选集改为列表形式展示
+  const hasRichEpisodeNames = useMemo(
+    () =>
+      Array.isArray(richEpisodeNames) &&
+      richEpisodeNames.some((n) => !!n && n.trim() !== ''),
+    [richEpisodeNames]
+  );
+
+  // 无有效分集名（弹幕+TMDB 两路都失败）→ 无条件强制网格，避免残留列表视图用「第x集」兜底填满；
+  // 有分集名时才自动列表，且尊重用户手动切换
+  useEffect(() => {
+    if (!hasRichEpisodeNames) {
+      setEpisodeViewMode('grid');
+      return;
+    }
+    if (userSetViewModeRef.current) return;
+    setEpisodeViewMode('list');
+  }, [hasRichEpisodeNames]);
+
+  // 点击菜单外部关闭三点菜单
+  useEffect(() => {
+    if (!showEpisodeMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        episodeMenuRef.current &&
+        !episodeMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowEpisodeMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () =>
+      document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEpisodeMenu]);
+
   return (
     <div className='md:ml-2 px-4 py-0 h-full rounded-xl bg-black/10 dark:bg-white/5 flex flex-col border border-white/0 dark:border-white/30 overflow-hidden'>
       {/* 主要的 Tab 切换 - 无缝融入设计 */}
@@ -766,6 +888,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             onDanmakuSelect={onDanmakuSelect}
             currentSelection={currentDanmakuSelection || null}
             onUploadDanmaku={onUploadDanmaku}
+            onEpisodesLoaded={onDanmakuEpisodesLoaded}
           />
         </div>
       )}
@@ -774,7 +897,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       {activeTab === 'episodes' && (
         <>
           {/* 分类标签 */}
-          <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
+          <div className='relative z-30 flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
             <div
               className='flex-1 overflow-x-auto'
               ref={categoryContainerRef}
@@ -829,14 +952,70 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                 />
               </svg>
             </button>
-            {/* 集数屏蔽配置按钮 */}
-            <button
-              className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center ${iconButtonClass} transition-colors transform translate-y-[-4px]`}
-              onClick={() => setShowFilterSettings(true)}
-              title='集数屏蔽设置'
+            {/* 更多菜单（集数视图切换 / 集数屏蔽 / 手动矫正标题） */}
+            <div
+              className='relative flex-shrink-0 transform translate-y-[-4px]'
+              ref={episodeMenuRef}
             >
-              <Settings className='w-4 h-4' />
-            </button>
+              <button
+                className={`w-8 h-8 rounded-md flex items-center justify-center ${iconButtonClass} transition-colors`}
+                onClick={() => setShowEpisodeMenu((v) => !v)}
+                title='更多'
+                aria-haspopup='menu'
+                aria-expanded={showEpisodeMenu}
+              >
+                <MoreVertical className='w-4 h-4' />
+              </button>
+              {showEpisodeMenu && (
+                <div
+                  className='absolute right-0 top-9 z-50 min-w-[9rem] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg py-1'
+                  role='menu'
+                >
+                  <button
+                    role='menuitem'
+                    className='w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+                    onClick={() => {
+                      userSetViewModeRef.current = true;
+                      setEpisodeViewMode((m) =>
+                        m === 'list' ? 'grid' : 'list'
+                      );
+                      setShowEpisodeMenu(false);
+                    }}
+                  >
+                    {episodeViewMode === 'list' ? (
+                      <LayoutGrid className='w-4 h-4' />
+                    ) : (
+                      <ListIcon className='w-4 h-4' />
+                    )}
+                    <span>
+                      {episodeViewMode === 'list' ? '网格视图' : '列表视图'}
+                    </span>
+                  </button>
+                  <button
+                    role='menuitem'
+                    className='w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+                    onClick={() => {
+                      setShowFilterSettings(true);
+                      setShowEpisodeMenu(false);
+                    }}
+                  >
+                    <Settings className='w-4 h-4' />
+                    <span>集数屏蔽</span>
+                  </button>
+                  <button
+                    role='menuitem'
+                    className='w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+                    onClick={() => {
+                      setShowTitleCorrect(true);
+                      setShowEpisodeMenu(false);
+                    }}
+                  >
+                    <Wand2 className='w-4 h-4' />
+                    <span>手动矫正标题</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 集数网格 */}

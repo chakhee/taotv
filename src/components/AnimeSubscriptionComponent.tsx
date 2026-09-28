@@ -1,12 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { AlertCircle, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-react';
+import { AlertCircle, FlaskConical, Loader2, Plus, RefreshCw, Sparkles, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { AdminConfig } from '@/lib/admin.types';
-import { AnimeSubscription, AnimeSubscriptionDownloadTool } from '@/types/anime-subscription';
+import {
+  AnimeSubscription,
+  AnimeSubscriptionDownloadTool,
+  EpisodeTestResult,
+} from '@/types/anime-subscription';
 
 interface AnimeSubscriptionComponentProps {
   config: AdminConfig | null;
@@ -153,6 +157,12 @@ export default function AnimeSubscriptionComponent({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<AnimeSubscription | null>(null);
   const [checkingId, setCheckingId] = useState<string | null>(null);
+  const [recognizing, setRecognizing] = useState(false);
+  const [recognizeError, setRecognizeError] = useState('');
+  const [recognition, setRecognition] = useState<FansubRecognizeResult | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testError, setTestError] = useState('');
+  const [testResult, setTestResult] = useState<EpisodeTestResult | null>(null);
   const [alertModal, setAlertModal] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'warning' | 'info';
@@ -204,6 +214,10 @@ export default function AnimeSubscriptionComponent({
     });
     setEditingSubscription(null);
     setShowAddForm(false);
+    setRecognizeError('');
+    setRecognition(null);
+    setTestError('');
+    setTestResult(null);
   };
 
   // 切换启用状态
@@ -277,6 +291,10 @@ export default function AnimeSubscriptionComponent({
       lastEpisode: sub.lastEpisode,
       enabled: sub.enabled,
     });
+    setRecognizeError('');
+    setRecognition(null);
+    setTestError('');
+    setTestResult(null);
     setEditingSubscription(sub);
     setShowAddForm(false);
   };
@@ -288,6 +306,15 @@ export default function AnimeSubscriptionComponent({
         type: 'warning',
         title: '请填写必填字段',
         message: '番剧名称和过滤关键词不能为空',
+      });
+      return;
+    }
+    const regexError = checkEpisodeRegex(formData.episodeRegex);
+    if (regexError) {
+      showAlert({
+        type: 'warning',
+        title: '集数正则无效',
+        message: regexError,
       });
       return;
     }
@@ -537,6 +564,121 @@ export default function AnimeSubscriptionComponent({
                   多个关键词用逗号分隔
                 </p>
               </div>
+            </div>
+            <div>
+              <div className='flex items-center justify-between mb-1'>
+                <label className='block text-sm font-medium text-gray-700 dark:text-gray-300'>
+                  集数提取正则
+                </label>
+                <button
+                  type='button'
+                  onClick={handleTest}
+                  disabled={testing}
+                  title='按当前表单实际搜索一次，查看能过滤到哪些集数'
+                  className='flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border border-blue-300 dark:border-blue-500/60 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors disabled:opacity-50'
+                >
+                  {testing ? (
+                    <Loader2 size={12} className='animate-spin' />
+                  ) : (
+                    <FlaskConical size={12} />
+                  )}
+                  测试
+                </button>
+              </div>
+              <input
+                type='text'
+                value={formData.episodeRegex}
+                onChange={(e) => setFormData({ ...formData, episodeRegex: e.target.value })}
+                placeholder='第(\d{1,3})[话話集]'
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500'
+              />
+              <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+                可选；首个捕获组将作为集数（无捕获组时取整个匹配），留空使用内置规则
+              </p>
+              {testError ? (
+                <p className='mt-1 text-xs text-red-600 dark:text-red-400'>
+                  {testError}
+                </p>
+              ) : null}
+              {testResult ? (
+                <div className='mt-2 rounded-lg border border-gray-200 dark:border-gray-700 p-2.5 space-y-2.5'>
+                  <div className='flex items-center justify-between'>
+                    <p className='text-[11px] text-gray-500 dark:text-gray-400'>
+                      搜索到 {testResult.total} 条 · 关键词命中 {testResult.matched} 条
+                    </p>
+                    <button
+                      type='button'
+                      onClick={() => setTestResult(null)}
+                      className='p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                  {testResult.matched === 0 ? (
+                    <p className='text-xs text-gray-400'>没有种子命中过滤条件</p>
+                  ) : (
+                    <>
+                      <div className='flex flex-wrap gap-1.5'>
+                        {testResult.episodes.map((ep) => {
+                          const isNew = testResult.newEpisodes.includes(ep);
+                          return (
+                            <span
+                              key={ep}
+                              className={`px-2 py-0.5 text-xs rounded-full border ${
+                                isNew
+                                  ? 'bg-green-600 text-white border-green-600'
+                                  : 'bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600'
+                              }`}
+                              title={isNew ? '新集数，会触发下载' : '不大于当前集数，不会下载'}
+                            >
+                              第 {ep} 集{isNew ? ' ·新' : ''}
+                            </span>
+                          );
+                        })}
+                        {testResult.unparsed > 0 ? (
+                          <span
+                            className='px-2 py-0.5 text-xs rounded-full border border-amber-300 dark:border-amber-500/60 text-amber-600 dark:text-amber-400'
+                            title='命中过滤关键词但未能提取集数'
+                          >
+                            {testResult.unparsed} 条未识别集数
+                          </span>
+                        ) : null}
+                      </div>
+                      {testResult.newEpisodes.length > 0 ? (
+                        <p className='text-[11px] text-gray-500 dark:text-gray-400'>
+                          当前集数 {testResult.lastEpisode}，会下载新集数：
+                          {testResult.newEpisodes.join('、')}
+                        </p>
+                      ) : (
+                        <p className='text-[11px] text-gray-500 dark:text-gray-400'>
+                          当前集数 {testResult.lastEpisode}，没有需要下载的新集数
+                        </p>
+                      )}
+                      <div className='max-h-48 overflow-y-auto space-y-1'>
+                        {testResult.items.map((item, idx) => (
+                          <div
+                            key={`${idx}-${item.title}`}
+                            className='flex items-start gap-1.5 text-[11px] leading-relaxed'
+                          >
+                            <span
+                              className={`flex-shrink-0 mt-px px-1.5 rounded ${
+                                item.episode == null
+                                  ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                                  : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
+                              }`}
+                            >
+                              {item.episode == null ? '未识别' : `第${item.episode}集`}
+                            </span>
+                            <span className='break-all text-gray-500 dark:text-gray-400'>
+                              {item.title}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : null}
             </div>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>

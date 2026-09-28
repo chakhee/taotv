@@ -3,9 +3,11 @@
 import { db } from '@/lib/db';
 
 import { AdminConfig } from './admin.types';
+import { setServerTmdbImageBaseUrl } from './tmdb-image-base';
 
 const BUILTIN_DANMAKU_API_BASE = 'https://mtvpls-danmu.netlify.app/87654321';
 const DEFAULT_LIVE_REFRESH_INTERVAL_HOURS = 12;
+const DEFAULT_TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org';
 
 function normalizeLiveRefreshIntervalHours(
   refreshIntervalHours?: number
@@ -295,6 +297,8 @@ async function getInitConfig(
       TMDBApiKey: process.env.TMDB_API_KEY || '',
       TMDBProxy: process.env.TMDB_PROXY || '',
       TMDBReverseProxy: process.env.TMDB_REVERSE_PROXY || '',
+      TMDBImageBaseUrl:
+        process.env.TMDB_IMAGE_BASE_URL || DEFAULT_TMDB_IMAGE_BASE_URL,
       // 动漫/Bangumi配置
       BangumiDataSource:
         (process.env.NEXT_PUBLIC_BANGUMI_DATA_SOURCE as any) || 'direct',
@@ -307,6 +311,9 @@ async function getInitConfig(
         process.env.NEXT_PUBLIC_BANGUMI_IMAGE_BASE_URL ||
         '',
       BangumiProxy: process.env.BANGUMI_PROXY || '',
+      LiveChartProxy: process.env.LIVECHART_PROXY || '',
+      // 本地设置云同步模式（全局）：off=关闭 manual=手动 auto=自动
+      LocalSettingsSyncMode: 'off',
       // Pansou配置
       PansouApiUrl: '',
       PansouUsername: '',
@@ -519,6 +526,7 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       DanmakuApiBase: BUILTIN_DANMAKU_API_BASE,
       DanmakuApiToken: '87654321',
       DanmakuAutoLoadDefault: true,
+      TMDBImageBaseUrl: DEFAULT_TMDB_IMAGE_BASE_URL,
       PansouApiUrl: '',
       PansouUsername: '',
       PansouPassword: '',
@@ -554,6 +562,16 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   }
   if (adminConfig.SiteConfig.DanmakuAutoLoadDefault === undefined) {
     adminConfig.SiteConfig.DanmakuAutoLoadDefault = true;
+  }
+  if (adminConfig.SiteConfig.LiveChartProxy === undefined) {
+    adminConfig.SiteConfig.LiveChartProxy = process.env.LIVECHART_PROXY || '';
+  }
+  // 本地设置云同步模式兜底
+  if (
+    adminConfig.SiteConfig.LocalSettingsSyncMode !== 'manual' &&
+    adminConfig.SiteConfig.LocalSettingsSyncMode !== 'auto'
+  ) {
+    adminConfig.SiteConfig.LocalSettingsSyncMode = 'off';
   }
   // 确保评论开关存在
   if (adminConfig.SiteConfig.EnableComments === undefined) {

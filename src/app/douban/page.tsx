@@ -14,6 +14,7 @@ import {
 } from '@/lib/douban.client';
 import { DoubanItem, DoubanResult } from '@/lib/types';
 
+import BangumiScheduleTimeline from '@/components/BangumiScheduleTimeline';
 import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import DoubanCustomSelector from '@/components/DoubanCustomSelector';
 import DoubanSelector from '@/components/DoubanSelector';
@@ -90,6 +91,9 @@ function DoubanPageClient() {
     }
     return '';
   });
+
+  // 每日放送视图模式：grid(卡片) / schedule(时刻表)
+  const [viewMode, setViewMode] = useState<'grid' | 'schedule'>('grid');
 
   // 获取自定义分类数据
   useEffect(() => {
@@ -768,6 +772,12 @@ function DoubanPageClient() {
     return activePath;
   };
 
+  // 是否为时刻表视图（每日放送 + 已切换）
+  const isScheduleView =
+    type === 'anime' &&
+    primarySelection === '每日放送' &&
+    viewMode === 'schedule';
+
   return (
     <PageLayout activePath={getActivePath()}>
       <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible'>
@@ -794,6 +804,8 @@ function DoubanPageClient() {
                 onSecondaryChange={handleSecondaryChange}
                 onMultiLevelChange={handleMultiLevelChange}
                 onWeekdayChange={handleWeekdayChange}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
               />
             </div>
           ) : (
@@ -836,7 +848,7 @@ function DoubanPageClient() {
           </div>
 
           {/* 加载更多指示器 */}
-          {hasMore && !loading && (
+          {!isScheduleView && hasMore && !loading && (
             <div
               ref={(el) => {
                 if (el && el.offsetParent !== null) {
@@ -857,12 +869,12 @@ function DoubanPageClient() {
           )}
 
           {/* 没有更多数据提示 */}
-          {!hasMore && doubanData.length > 0 && (
+          {!isScheduleView && !hasMore && doubanData.length > 0 && (
             <div className='text-center text-gray-500 py-8'>已加载全部内容</div>
           )}
 
           {/* 空状态 */}
-          {!loading && doubanData.length === 0 && (
+          {!isScheduleView && !loading && doubanData.length === 0 && (
             <div className='text-center text-gray-500 py-8'>暂无相关内容</div>
           )}
         </div>

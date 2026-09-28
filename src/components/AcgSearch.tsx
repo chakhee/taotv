@@ -73,6 +73,7 @@ export default function AcgSearch({
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [copyingId, setCopyingId] = useState<string | null>(null);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<AcgSearchItem | null>(null);
   const [customName, setCustomName] = useState('');
@@ -298,6 +299,31 @@ export default function AcgSearch({
       setSelectedItem(null);
       setCustomName('');
       setDownloadTool('aria2');
+    }
+  };
+
+  // 复制磁链：原样复制 RSS 里的链接（磁链复制磁链，.torrent 复制 .torrent），纯前端不走服务器
+  const handleCopyMagnet = async (item: AcgSearchItem, index: number) => {
+    const itemId = getAcgItemId(item, index);
+    const link = item.torrentUrl || item.link;
+    if (!link || copyingId === itemId) return;
+
+    setCopyingId(itemId);
+    try {
+      await navigator.clipboard.writeText(link);
+      setToast({
+        message: '链接已复制',
+        type: 'success',
+        onClose: () => setToast(null),
+      });
+    } catch (err: any) {
+      setToast({
+        message: err.message || '复制失败',
+        type: 'error',
+        onClose: () => setToast(null),
+      });
+    } finally {
+      setCopyingId(null);
     }
   };
 

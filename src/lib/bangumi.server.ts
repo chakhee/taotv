@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import nodeFetch from 'node-fetch';
 
 export type AnimeDataSource = 'direct' | 'server-proxy' | 'custom-baseurl';
 
 export const DEFAULT_BANGUMI_BASE_URL = 'https://api.bgm.tv';
 
-function isCloudflareEnvironment(): boolean {
+export function isCloudflareEnvironment(): boolean {
   return (
     process.env.CF_PAGES === '1' || process.env.BUILD_TARGET === 'cloudflare'
   );
@@ -32,6 +31,7 @@ export async function fetchBangumiFromServer(
     return fetch(url, {
       headers: {
         Accept: 'application/json',
+        'Accept-Encoding': 'identity',
         'User-Agent': 'MoonTVPlus/1.0 (https://github.com)',
       },
       signal: AbortSignal.timeout(15000),
@@ -41,6 +41,7 @@ export async function fetchBangumiFromServer(
   const fetchOptions: any = {
     headers: {
       Accept: 'application/json',
+      'Accept-Encoding': 'identity',
       'User-Agent': 'MoonTVPlus/1.0 (https://github.com)',
     },
     signal: AbortSignal.timeout(proxy ? 30000 : 15000),
@@ -53,5 +54,5 @@ export async function fetchBangumiFromServer(
     });
   }
 
-  return nodeFetch(url, fetchOptions) as unknown as Promise<Response>;
+  return fetch(url, fetchOptions) as Promise<Response>;
 }
