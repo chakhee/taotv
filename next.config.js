@@ -65,11 +65,19 @@ const createNextConfig = (phase) => {
       // 让浏览器原生加载其 ESM 模块图（play/page.tsx 的 ensureBitsubRenderer）。
       const libbitsubSource = path.join(__dirname, 'node_modules', 'libbitsub');
       const libbitsubTarget = path.join(__dirname, 'public', 'libbitsub');
-      for (const dir of ['dist', 'pkg']) {
-        fs.cpSync(path.join(libbitsubSource, dir), path.join(libbitsubTarget, dir), {
-          recursive: true,
-          filter: (source) => !/\.(d\.ts|map)$/.test(source),
-        });
+      const hasLibbitsub = fs.existsSync(libbitsubSource);
+      if (hasLibbitsub) {
+        for (const dir of ['dist', 'pkg']) {
+          const sourceDir = path.join(libbitsubSource, dir);
+          if (!fs.existsSync(sourceDir)) continue;
+          fs.cpSync(sourceDir, path.join(libbitsubTarget, dir), {
+            recursive: true,
+            filter: (source) => !/\.(d\.ts|map)$/.test(source),
+          });
+        }
+      } else {
+        // CI 可能在依赖切换期间不存在 libbitsub，跳过静态复制以避免构建失败。
+        console.warn('[next.config] libbitsub not found, skipping libbitsub static asset copy');
       }
       // dist/ 是面向 bundler 的输出，相对导入不带 .js 扩展名（如 from './wrapper'、
       // import('../../pkg/libbitsub')）；浏览器原生 ESM 不做扩展名补全会 404，
@@ -97,7 +105,10 @@ const createNextConfig = (phase) => {
           }
         }
       };
-      rewriteLibbitsubImports(path.join(libbitsubTarget, 'dist'));
+      const libbitsubDistTarget = path.join(libbitsubTarget, 'dist');
+      if (fs.existsSync(libbitsubDistTarget)) {
+        rewriteLibbitsubImports(libbitsubDistTarget);
+      }
     }
 
     // Grab the existing rule that handles SVG imports
