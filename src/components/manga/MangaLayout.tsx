@@ -2,12 +2,14 @@
 
 import {
   BookOpen,
+  ChevronLeft,
   Compass,
   History,
   List,
   Search,
   Settings2,
 } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 import { cn } from '@/lib/cn';
@@ -18,6 +20,9 @@ import {
 } from '@/components/media/library';
 import MediaShell, { MediaShellTab } from '@/components/media/MediaShell';
 import { useSite } from '@/components/SiteProvider';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { UpdateNotification } from '@/components/UpdateNotification';
+import { UserMenu } from '@/components/UserMenu';
 
 const tabs: MediaShellTab[] = [
   { href: '/manga', label: '推荐', icon: Compass },
@@ -25,6 +30,8 @@ const tabs: MediaShellTab[] = [
   { href: '/manga/shelf', label: '书架', icon: BookOpen },
   { href: '/manga/history', label: '历史', icon: History },
 ];
+
+const sectionTabs = tabs;
 
 // 阅读页内容区样式：保持改造前的原值，避免 /manga/read 布局回归
 const READER_MAIN_CLASS =
@@ -82,6 +89,8 @@ export default function MangaLayout({
   const { siteName } = useSite();
   const meta = getMeta(pathname, searchParams);
   const isReadingPage = pathname === '/manga/read';
+  const isActive = (href: string) =>
+    href === '/manga' ? pathname === '/manga' : pathname.startsWith(href);
 
   const readerActions = (
     <>
