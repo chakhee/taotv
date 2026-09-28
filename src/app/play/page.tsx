@@ -10389,89 +10389,21 @@ function PlayPageClient() {
   if (loading) {
     return (
       <PageLayout activePath='/play' hideNavigation={isWebFullscreen}>
-        {/* fixed 铺满视口：main 在移动端有 3rem 顶距和底部安全区，
-            用 min-h-screen 会把内容整体压到视口中心偏下 */}
         <div className='mtv-load-overlay fixed inset-0 flex items-center justify-center pointer-events-none'>
-          <div className='text-center max-w-md mx-auto px-6'>
-            {/* 动画影院图标 */}
-            <div className='relative mb-8'>
-              <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
-                <div className='text-white text-4xl'>
-                  {loadingStage === 'searching' && ''}
-                  {loadingStage === 'preferring' && ''}
-                  {loadingStage === 'fetching' && ''}
-                  {loadingStage === 'ready' && ''}
+          <div className='w-full max-w-md px-6'>
+            <LoadingStyle
+              steps={loadSteps.map((key) => LOADING_STEP_META[key])}
+              activeStepIdx={activeStepIdx}
+              message={plainLoadingMessage || '视频加载中'}
+              legacy={
+                <div className='text-center'>
+                  <div className='mb-6 inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 text-4xl text-white shadow-2xl'>
+                    <Loader2 className='h-10 w-10 animate-spin' />
+                  </div>
+                  <p className='text-xl font-semibold text-gray-800 dark:text-gray-200'>
+                    {loadingMessage}
+                  </p>
                 </div>
-                {/* 旋转光环 */}
-                <div className='absolute -inset-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
-              </div>
-
-                    {/* 浮动粒子效果 */}
-                    <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
-                      <div className='absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-bounce'></div>
-                      <div
-                        className='absolute top-4 right-4 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce'
-                        style={{ animationDelay: '0.5s' }}
-                      ></div>
-                      <div
-                        className='absolute bottom-3 left-6 w-1 h-1 bg-lime-400 rounded-full animate-bounce'
-                        style={{ animationDelay: '1s' }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* 进度指示器 */}
-                  <div className='mb-6 w-80 mx-auto'>
-                    <div className='flex justify-center space-x-2 mb-4'>
-                      <div
-                        className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'searching' || loadingStage === 'fetching'
-                          ? 'bg-green-500 scale-125'
-                          : loadingStage === 'preferring' ||
-                            loadingStage === 'ready'
-                            ? 'bg-green-500'
-                            : 'bg-gray-300'
-                          }`}
-                      ></div>
-                      <div
-                        className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'preferring'
-                          ? 'bg-green-500 scale-125'
-                          : loadingStage === 'ready'
-                            ? 'bg-green-500'
-                            : 'bg-gray-300'
-                          }`}
-                      ></div>
-                      <div
-                        className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'ready'
-                          ? 'bg-green-500 scale-125'
-                          : 'bg-gray-300'
-                          }`}
-                      ></div>
-                    </div>
-
-                    {/* 进度条 */}
-                    <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden'>
-                      <div
-                        className='h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-1000 ease-out'
-                        style={{
-                          width:
-                            loadingStage === 'searching' ||
-                              loadingStage === 'fetching'
-                              ? '33%'
-                              : loadingStage === 'preferring'
-                                ? '66%'
-                                : '100%',
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* 加载消息 */}
-                  <div className='space-y-2'>
-                    <p className='text-xl font-semibold text-gray-800 dark:text-gray-200 animate-pulse'>
-                      {loadingMessage}
-                    </p>
-                  </div>
-                </>
               }
             />
           </div>
@@ -10486,47 +10418,27 @@ function PlayPageClient() {
         <div className='flex min-h-screen w-full items-center justify-center overflow-x-hidden bg-transparent px-4 py-6'>
           <div className='flex w-full flex-col items-center'>
             <div className='w-full max-w-md text-center'>
-              {/* 错误图标 */}
-              <div className='relative mb-8'>
-                <div className='relative mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 shadow-2xl transition-transform duration-300 hover:scale-105'>
-                  <div className='text-4xl text-white'>⚠</div>
-                  {/* 脉冲效果 */}
-                  <div className='absolute -inset-2 animate-pulse rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 opacity-20'></div>
-                </div>
+              <LoadingErrorStyle
+                steps={loadSteps.map((key) => LOADING_STEP_META[key])}
+                activeStepIdx={activeStepIdx}
+                message={error}
+                legacy={
+                  <div className='mb-8 text-center'>
+                    <div className='relative mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-2xl'>
+                      <AlertCircle className='h-10 w-10' />
+                    </div>
+                    <h2 className='text-2xl font-bold text-gray-800 dark:text-gray-200'>
+                      哎呀，出现了一些问题
+                    </h2>
+                    <div className='mtv-err-box mt-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20'>
+                      <p className='font-medium text-red-600 dark:text-red-400'>
+                        {error}
+                      </p>
+                    </div>
+                  </div>
+                }
+              />
 
-                      {/* 浮动错误粒子 */}
-                      <div className='pointer-events-none absolute left-0 top-0 h-full w-full'>
-                        <div className='absolute left-2 top-2 h-2 w-2 animate-bounce rounded-full bg-red-400'></div>
-                        <div
-                          className='absolute right-4 top-4 h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400'
-                          style={{ animationDelay: '0.5s' }}
-                        ></div>
-                        <div
-                          className='absolute bottom-3 left-6 h-1 w-1 animate-bounce rounded-full bg-yellow-400'
-                          style={{ animationDelay: '1s' }}
-                        ></div>
-                      </div>
-                    </>
-                  }
-                />
-              </div>
-
-              {/* 错误信息 */}
-              <div className='mb-8 space-y-4'>
-                <h2 className='text-2xl font-bold text-gray-800 dark:text-gray-200'>
-                  哎呀，出现了一些问题
-                </h2>
-                <div className='mtv-err-box rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20'>
-                  <p className='font-medium text-red-600 dark:text-red-400'>
-                    {error}
-                  </p>
-                </div>
-                <p className='text-sm text-gray-500 dark:text-gray-400'>
-                  请检查网络连接或尝试刷新页面
-                </p>
-              </div>
-
-              {/* 操作按钮 */}
               <div className='space-y-3'>
                 <button
                   onClick={() =>
