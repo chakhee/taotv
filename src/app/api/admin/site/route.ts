@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
       TMDBApiKey?: string;
       TMDBProxy?: string;
       TMDBReverseProxy?: string;
+      TMDBImageBaseUrl?: string;
       BangumiDataSource?: 'direct' | 'server-proxy' | 'custom-baseurl';
       BangumiApiBaseUrl?: string;
       BangumiImageBaseUrl?: string;
@@ -271,10 +272,12 @@ export async function POST(request: NextRequest) {
       TMDBApiKey,
       TMDBProxy,
       TMDBReverseProxy,
+      TMDBImageBaseUrl,
       BangumiDataSource,
       BangumiApiBaseUrl,
       BangumiImageBaseUrl,
       BangumiProxy,
+      LiveChartProxy,
       BannerDataSource,
       RecommendationDataSource,
       PansouApiUrl,
