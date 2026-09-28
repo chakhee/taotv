@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { AlertCircle, FlaskConical, Loader2, Plus, RefreshCw, Sparkles, Trash2, X } from 'lucide-react';
+import { AlertCircle, FlaskConical, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -157,9 +157,6 @@ export default function AnimeSubscriptionComponent({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<AnimeSubscription | null>(null);
   const [checkingId, setCheckingId] = useState<string | null>(null);
-  const [recognizing, setRecognizing] = useState(false);
-  const [recognizeError, setRecognizeError] = useState('');
-  const [recognition, setRecognition] = useState<FansubRecognizeResult | null>(null);
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState('');
   const [testResult, setTestResult] = useState<EpisodeTestResult | null>(null);
@@ -189,10 +186,23 @@ export default function AnimeSubscriptionComponent({
   const [formData, setFormData] = useState({
     title: '',
     filterText: '',
+    episodeRegex: '',
     source: 'mikan' as 'acgrip' | 'mikan' | 'dmhy' | 'nyaa',
     lastEpisode: 0,
     enabled: true,
   });
+
+  const checkEpisodeRegex = (regex: string): string | null => {
+    const trimmed = regex.trim();
+    if (!trimmed) return null;
+    try {
+      // eslint-disable-next-line no-new
+      new RegExp(trimmed);
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : '正则无效';
+    }
+  };
 
   // 加载配置
   useEffect(() => {
@@ -208,14 +218,13 @@ export default function AnimeSubscriptionComponent({
     setFormData({
       title: '',
       filterText: '',
+      episodeRegex: '',
       source: 'mikan',
       lastEpisode: 0,
       enabled: true,
     });
     setEditingSubscription(null);
     setShowAddForm(false);
-    setRecognizeError('');
-    setRecognition(null);
     setTestError('');
     setTestResult(null);
   };
@@ -287,12 +296,11 @@ export default function AnimeSubscriptionComponent({
     setFormData({
       title: sub.title,
       filterText: sub.filterText,
+      episodeRegex: sub.episodeRegex || '',
       source: sub.source,
       lastEpisode: sub.lastEpisode,
       enabled: sub.enabled,
     });
-    setRecognizeError('');
-    setRecognition(null);
     setTestError('');
     setTestResult(null);
     setEditingSubscription(sub);
