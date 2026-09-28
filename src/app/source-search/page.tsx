@@ -14,6 +14,8 @@ import {
 import { ApiSite } from '@/lib/config';
 import {
   getChildCategories,
+  getParentCategories,
+  isHierarchicalCategories,
   pickDefaultSelection,
   type CategoryNode,
 } from '@/lib/category-tree';
