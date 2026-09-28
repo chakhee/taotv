@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, X } from 'lucide-react';
+import { FlaskConical, Loader2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -14,6 +14,21 @@ interface AnimeSubscribeModalProps {
   onSuccess?: () => void;
 }
 
+interface EpisodeTestItem {
+  title: string;
+  episode: number | null;
+}
+
+interface EpisodeTestResult {
+  total: number;
+  matched: number;
+  episodes: number[];
+  newEpisodes: number[];
+  unparsed: number;
+  lastEpisode: number;
+  items: EpisodeTestItem[];
+}
+
 export default function AnimeSubscribeModal({
   isOpen,
   onClose,
@@ -24,9 +39,14 @@ export default function AnimeSubscribeModal({
   const [mounted, setMounted] = useState(false);
   const [title, setTitle] = useState('');
   const [filterText, setFilterText] = useState('');
+  const [excludeText, setExcludeText] = useState('');
+  const [episodeRegex, setEpisodeRegex] = useState('');
   const [lastEpisode, setLastEpisode] = useState(0);
   const [source, setSource] = useState<AnimeSource>('mikan');
   const [enabled, setEnabled] = useState(true);
+  const [testing, setTesting] = useState(false);
+  const [testError, setTestError] = useState('');
+  const [testResult, setTestResult] = useState<EpisodeTestResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -39,9 +59,14 @@ export default function AnimeSubscribeModal({
     const seedTitle = initialTitle || '';
     setTitle(seedTitle);
     setFilterText(seedTitle);
+    setExcludeText('');
+    setEpisodeRegex('');
     setLastEpisode(Number.isFinite(initialLastEpisode) ? Math.max(0, initialLastEpisode) : 0);
     setSource('mikan');
     setEnabled(true);
+    setTesting(false);
+    setTestError('');
+    setTestResult(null);
     setSubmitting(false);
     setError('');
   }, [isOpen, initialTitle, initialLastEpisode]);
@@ -49,46 +74,6 @@ export default function AnimeSubscribeModal({
   const canSubmit = useMemo(() => {
     return title.trim().length > 0 && filterText.trim().length > 0 && !submitting;
   }, [title, filterText, submitting]);
-
-  /** 智能识别：按番剧名在当前源搜一次，对结果做字幕组 × 字幕形态分组 */
-  const handleRecognize = async () => {
-    const keyword = form.title.trim();
-    if (!keyword) {
-      setRecognizeError('请先填写番剧名称');
-      return;
-    }
-    try {
-      setRecognizing(true);
-      setRecognizeError('');
-      const res = await fetch('/api/admin/anime-subscription/recognize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: keyword, source: form.source }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '智能识别失败');
-      }
-      const data: FansubRecognizeResult = await res.json();
-      setRecognition(data);
-    } catch (e) {
-      setRecognition(null);
-      setRecognizeError(e instanceof Error ? e.message : '智能识别失败');
-    } finally {
-      setRecognizing(false);
-    }
-  };
-
-  /** 点击识别结果：将「字幕组&字幕形态」写入过滤关键词（替换） */
-  const applyRecognition = (fansub: FansubRecognition, variant: FansubVariant) => {
-    setForm((prev) => ({
-      ...prev,
-      filterText: buildFilterTextFromRecognition(
-        fansub.fansubFilter,
-        variant.filter
-      ),
-    }));
-  };
 
   /** 校验自定义集数正则（客户端快速反馈） */
   const checkEpisodeRegex = (regex: string): string | null => {
@@ -105,16 +90,16 @@ export default function AnimeSubscribeModal({
 
   /** 测试：按当前表单实际搜索一次，展示关键词命中与集数提取结果 */
   const handleTest = async () => {
-    const keyword = form.title.trim();
+    const keyword = title.trim();
     if (!keyword) {
       setTestError('请先填写番剧名称');
       return;
     }
-    if (!form.filterText.trim()) {
+    if (!filterText.trim()) {
       setTestError('请先填写过滤关键词');
       return;
     }
-    const regexError = checkEpisodeRegex(form.episodeRegex);
+    const regexError = checkEpisodeRegex(episodeRegex);
     if (regexError) {
       setTestError(`集数正则无效: ${regexError}`);
       return;
@@ -127,11 +112,11 @@ export default function AnimeSubscribeModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: keyword,
-          filterText: form.filterText.trim(),
-          excludeText: form.excludeText.trim(),
-          source: form.source,
-          episodeRegex: form.episodeRegex.trim(),
-          lastEpisode: form.lastEpisode,
+          filterText: filterText.trim(),
+          excludeText: excludeText.trim(),
+          source,
+          episodeRegex: episodeRegex.trim(),
+          lastEpisode,
         }),
       });
       if (!res.ok) {
@@ -240,8 +225,8 @@ export default function AnimeSubscribeModal({
               </button>
             </div>
             <input
-              value={form.episodeRegex}
-              onChange={(e) => setForm({ ...form, episodeRegex: e.target.value })}
+              value={episodeRegex}
+              onChange={(e) => setEpisodeRegex(e.target.value)}
               className='w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm'
               placeholder='第(\d{1,3})[话話集]'
             />
